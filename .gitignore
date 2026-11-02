@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.vscode/
+.idea/
+
+# WorkBuddy local project data (not part of the skill deliverable)
+.workbuddy/
+
+# Generated task snapshots (runtime output, not source)
+.task-portability/

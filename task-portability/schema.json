@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://workbuddy.local/skills/task-portability/schema.json",
+  "title": "Task Snapshot Schema",
+  "description": "Schema for a portable, self-contained AI task snapshot. Model-agnostic and platform-agnostic.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "identity",
+    "goal",
+    "context",
+    "progress",
+    "artifacts",
+    "resume"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Version of this snapshot schema.",
+      "const": "1.0.0"
+    },
+    "identity": {
+      "type": "object",
+      "required": ["task_id", "title", "slug", "created_at", "updated_at", "status"],
+      "properties": {
+        "task_id": { "type": "string" },
+        "title": { "type": "string" },
+        "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "status": {
+          "type": "string",
+          "enum": ["initialized", "in-progress", "checkpointed", "completed", "abandoned"]
+        }
+      }
+    },
+    "goal": {
+      "type": "object",
+      "required": ["goal", "success_criteria"],
+      "properties": {
+        "goal": { "type": "string" },
+        "success_criteria": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "non_goals": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": ["background"],
+      "properties": {
+        "background": { "type": "string" },
+        "key_decisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["decision", "reason"],
+            "properties": {
+              "decision": { "type": "string" },
+              "reason": { "type": "string" }
+            }
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "terminology": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "properties": {
+        "completed": { "type": "array", "items": { "type": "string" } },
+        "in_progress": { "type": "array", "items": { "type": "string" } },
+        "next_steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["priority", "action"],
+            "properties": {
+              "priority": { "type": "integer" },
+              "action": { "type": "string" }
+            }
+          }
+        },
+        "blockers": { "type": "array", "items": { "type": "string" } },
+        "risks": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "description"],
+            "properties": {
+              "path": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "how_to_obtain"],
+            "properties": {
+              "name": { "type": "string" },
+              "how_to_obtain": { "type": "string" }
+            }
+          }
+        },
+        "environment": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "commands": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "resume": {
+      "type": "object",
+      "required": ["how_to_resume"],
+      "properties": {
+        "how_to_resume": { "type": "string" },
+        "contact": { "type": "string" },
+        "handoff_notes": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
