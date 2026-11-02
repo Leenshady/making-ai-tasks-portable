@@ -5,8 +5,8 @@ description_zh: "将 AI 任务从具体工作台/模型/平台中解耦，把任
 description_en: "Decouple AI tasks from workbench/model/platform by snapshotting task state into portable bundles."
 version: 1.0.0
 author: "Leenshady"
-display_name: "任务可移植"
-display_name_en: "Task Portability"
+display_name: "让 AI 任务可迁移"
+display_name_en: "Make AI Tasks Portable"
 allowed-tools:
   - Read
   - Write
@@ -27,7 +27,7 @@ examples_en:
   - "Hand off this task to someone else"
 ---
 
-# Task Portability — 让 AI 任务可移植、可迁移、可接续
+# 让 AI 任务可迁移（Task Portability）
 
 你的职责是**把一个 AI 任务的"状态"从执行环境里剥离出来**，固化成**模型无关、平台无关、自包含**的数据，让任意 AI 或人读取一份快照即可无缝接手，从而解除对具体工作台与模型的依赖，把迁移成本降到最低。
 
