@@ -6,24 +6,9 @@
 
 ---
 
-## 目录（Table of Contents）
-
-- [中文说明](#中文说明-chinese)
-  - [核心思路](#核心思路)
-  - [内容](#内容)
-  - [快照产出](#快照产出)
-  - [安装 skill](#安装-skill)
-  - [设计原则](#设计原则)
-- [English](#english)
-  - [Core Idea](#core-idea)
-  - [Contents](#contents)
-  - [Snapshot Output](#snapshot-output)
-  - [Installing the Skill](#installing-the-skill)
-  - [Design Principles](#design-principles)
-
----
-
 # 中文说明（Chinese）
+
+> [English ↓](#english)
 
 让 AI 任务从具体工作台 / 模型 / 平台中**解耦**，通过把任务完整状态固化成**自包含的可移植快照**，使任意 AI 或人读取一份文件即可无缝接手，迁移成本降到最低。
 
@@ -84,6 +69,8 @@ cp -r task-portability ~/.workbuddy/skills/
 ---
 
 # English
+
+> [中文 ↑](#中文说明chinese)
 
 Decouple AI tasks from any specific workbench, model, or platform by snapshotting a task's full state into a **self-contained, portable bundle**, so any AI or human can resume the task seamlessly by reading a single file — with minimal migration cost.
 
