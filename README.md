@@ -38,13 +38,15 @@
 
 ## 安装 skill
 
-将 `task-portability/` 目录复制到 WorkBuddy 的用户级 skills 目录：
+支持 WorkBuddy、Claude Code（原生安装）、Cursor、GitHub Copilot 及任意 LLM（降级为规则/提示词）等多种工具。详见 [INSTALL.md](INSTALL.md)。
+
+最快方式（WorkBuddy）：
 
 ```
 cp -r task-portability ~/.workbuddy/skills/
 ```
 
-之后即可通过 WorkBuddy 使用（"把这个任务快照一下" / "开始一个可迁移的任务"）。
+之后即可使用（"把这个任务快照一下" / "开始一个可迁移的任务"）。
 
 ## 设计原则
 
