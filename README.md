@@ -1,5 +1,30 @@
 # Making AI Tasks Portable
 
+> 这是一个 **AI Skill 项目**，用于把 AI 任务从具体工作台、模型、平台中解耦，让任务可移植、可迁移、可接续。
+>
+> This is an **AI Skill project** that decouples AI tasks from specific workbenches, models, and platforms, making tasks portable, migratable, and resumable.
+
+---
+
+## 目录（Table of Contents）
+
+- [中文说明](#中文说明-chinese)
+  - [核心思路](#核心思路)
+  - [内容](#内容)
+  - [快照产出](#快照产出)
+  - [安装 skill](#安装-skill)
+  - [设计原则](#设计原则)
+- [English](#english)
+  - [Core Idea](#core-idea)
+  - [Contents](#contents)
+  - [Snapshot Output](#snapshot-output)
+  - [Installing the Skill](#installing-the-skill)
+  - [Design Principles](#design-principles)
+
+---
+
+# 中文说明（Chinese）
+
 让 AI 任务从具体工作台 / 模型 / 平台中**解耦**，通过把任务完整状态固化成**自包含的可移植快照**，使任意 AI 或人读取一份文件即可无缝接手，迁移成本降到最低。
 
 ## 核心思路
@@ -16,7 +41,7 @@
 
 | 目录/文件 | 说明 |
 |---|---|
-| `task-portability/` | WorkBuddy skill：任务可移植性的完整实现 |
+| `task-portability/` | AI Skill：任务可移植性的完整实现 |
 | └ `SKILL.md` | skill 主体（方法论 + 工作流 + 硬性规则） |
 | └ `schema.json` | 快照 JSON 的校验 Schema |
 | └ `templates/` | Markdown 快照模板 |
@@ -55,3 +80,63 @@ cp -r task-portability ~/.workbuddy/skills/
 3. **绝对路径** —— 避免跨环境路径失效。
 4. **关键决策必留理由** —— 决策 + 理由是任务里最易丢失、最有价值的资产。
 5. **隐性知识必写下来** —— "口口相传才会知道"的东西，写进交接备注。
+
+---
+
+# English
+
+Decouple AI tasks from any specific workbench, model, or platform by snapshotting a task's full state into a **self-contained, portable bundle**, so any AI or human can resume the task seamlessly by reading a single file — with minimal migration cost.
+
+## Core Idea
+
+The real assets of an AI task are not "which tool it runs on", but three things:
+
+1. **Context** — goals, constraints, background, key decisions
+2. **Progress** — what's done, where it stands, what's next
+3. **Artifacts** — which files were produced, what resources are depended on, environment requirements
+
+Once these three are frozen into **model-agnostic, platform-agnostic, self-contained** data, the task is no longer held hostage by any single environment.
+
+## Contents
+
+| Directory / File | Description |
+|---|---|
+| `task-portability/` | The AI Skill: complete implementation of task portability |
+| └ `SKILL.md` | Skill body (methodology + workflow + hard rules) |
+| └ `schema.json` | Validation schema for the snapshot JSON |
+| └ `templates/` | Markdown snapshot template |
+| └ `references/` | Example snapshot (what the output looks like) |
+
+## Snapshot Output
+
+Each snapshot produces a **task snapshot bundle**:
+
+```
+<task-slug>/
+├── task-snapshot.md    # Human-readable → any AI or person can resume by reading this one file
+├── task-snapshot.json  # Programmable → validatable, convertible, and diffable for incremental tracking
+└── artifacts/          # (Optional) list of key artifacts
+```
+
+- **Markdown** ensures "any model can read it" (the foundation of model-agnosticism)
+- **JSON** ensures "validatable and convertible to other formats" (the foundation of platform-agnosticism and portability)
+
+## Installing the Skill
+
+Supports WorkBuddy, Claude Code (native install), Cursor, GitHub Copilot, and any LLM (as rules/prompts). See [INSTALL.md](INSTALL.md).
+
+Fastest way (WorkBuddy):
+
+```
+cp -r task-portability ~/.workbuddy/skills/
+```
+
+Then use it ("snapshot this task" / "start a migratable task").
+
+## Design Principles
+
+1. **Self-contained** — a successor can resume by reading only the latest snapshot, without revisiting history.
+2. **Dual-format sync** — Markdown and JSON describe the same state; change one and sync the other.
+3. **Absolute paths** — avoid path breakage across environments.
+4. **Decisions always carry their rationale** — decisions + reasons are the most easily lost, most valuable asset.
+5. **Tacit knowledge must be written down** — things "only known by word of mouth" go into the handoff notes.
