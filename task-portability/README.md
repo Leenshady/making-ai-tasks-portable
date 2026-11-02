@@ -1,12 +1,6 @@
 # task-portability
 
 > This is an **AI Skill** that decouples AI tasks from specific workbenches, models, and platforms, making tasks portable, migratable, and resumable.
->
-> 这是一个 **AI Skill**，用于把 AI 任务从具体工作台、模型、平台中解耦，让任务可移植、可迁移、可接续。
-
----
-
-# English
 
 Decouple AI tasks from any specific workbench, model, or platform by snapshotting a task's full state into a **self-contained, portable bundle**, so any AI or human can resume the task seamlessly by reading a single file — with minimal migration cost.
 
@@ -69,44 +63,3 @@ task-portability/
     ├── example-snapshot.md   # Example snapshot (what the output looks like)
     └── glossary.md           # Bilingual term glossary (cross-model semantics)
 ```
-
----
-
-# 中文说明（Chinese）
-
-把 AI 任务从具体工作台 / 模型 / 平台中**解耦**，将任务的完整状态固化成**自包含的可移植快照**，让任意 AI 或人读取一份文件即可无缝接手，迁移成本降到最低。
-
-## 解决什么问题
-
-AI 任务通常"活"在某一次对话、某一个工具、某一个模型里。一旦换环境、换模型、换平台，任务的上下文、进度、决策就丢了，迁移成本极高。本 skill 把任务真正的资产——**上下文、进度、工件**——冻结成模型无关、平台无关的数据，让任务"搬得走、接得上"。
-
-## 核心产出
-
-每次快照生成一个**任务快照包**：
-
-- `task-snapshot.md` —— 人类可读，任意 AI 或人读这一份即可接手
-- `task-snapshot.json` —— 可编程，可校验、可转换、可追踪增量
-
-## 什么时候用
-
-| 场景 | 动作 |
-|---|---|
-| 开始一个可移植的任务 | 初始化快照 |
-| 任务进行中要"打点"/换环境 | 增量快照 |
-| 交接给别人 / 换模型 | 增量快照 + 详细交接备注 |
-| 接手别人/别处的任务 | 读快照，按恢复指引接续 |
-
-## 怎么用
-
-1. 对 AI 说「把这个任务快照一下」或「开始一个可迁移的任务」。
-2. AI 会在任务目录下生成 `.task-portability/<slug>/` 快照包。
-3. 迁移时，把整个 `<slug>/` 目录 + 快照里记录的关键文件带走。
-4. 新环境中，让任意 AI 读 `task-snapshot.md` 即可接手。
-
-## 关键设计原则
-
-1. **自包含** —— 接手者只读最新一份快照即可接手，不回看历史。
-2. **双格式同步** —— Markdown 与 JSON 描述同一份状态，改一处同步另一处。
-3. **绝对路径** —— 避免跨环境路径失效。
-4. **关键决策必留理由** —— 决策 + 理由是任务里最易丢失、最有价值的资产。
-5. **隐性知识必写下来** —— 写进交接备注。

@@ -1,122 +1,122 @@
-# 任务快照（示例）
+# Task Snapshot (Example)
 
-> 这是一个示例快照，展示一份"合格"的任务快照长什么样。接手者读这一份即可完全接手。
+> This is an example snapshot showing what a valid task snapshot looks like. A successor can fully resume by reading this one file.
 
-## 身份与元信息
+## Identity & Meta
 
-| 字段 | 值 |
+| Field | Value |
 |---|---|
-| 任务 ID | `task-20261102-1530` |
-| 标题 | 为 NDM 扩展调整下载拦截策略 |
-| 状态 | in-progress |
-| 创建时间 | 2026-11-02T14:00:00+08:00 |
-| 更新时间 | 2026-11-02T15:30:00+08:00 |
-| 快照版本 | 1.0.0 |
+| Task ID | `task-20261102-1530` |
+| Title | Adjust download interception strategy for the NDM extension |
+| Status | in-progress |
+| Created At | 2026-11-02T14:00:00+08:00 |
+| Updated At | 2026-11-02T15:30:00+08:00 |
+| Schema Version | 1.0.0 |
 
-## 目标
+## Goal
 
-**目标（Goal）**
+**Goal**
 
-在不影响扩展其他功能（下载管理、状态监控）的前提下，调整 NDM Chrome 扩展的下载拦截策略，使其支持按文件类型过滤。
+Adjust the NDM Chrome extension's download interception to support file-type filtering, without affecting other features (download management, status monitoring).
 
-**成功标准（Success Criteria）**
+**Success Criteria**
 
-- `ct.js` 中新增文件类型过滤逻辑，且现有拦截路径行为不变
-- 通过手工测试：MP4 类型被拦截、其他类型正常放行
-- `bg.js` 无需改动（验证跨上下文通信不受影响）
+- `ct.js` gains file-type filtering logic, and existing interception paths behave unchanged.
+- Manual test passes: MP4 files are intercepted, other types pass through normally.
+- `bg.js` requires no change (verify cross-context communication is unaffected).
 
-**约束（Constraints）**
+**Constraints**
 
-- 必须保持 MV3 架构，使用 `chrome.storage.session` + `chrome.sendMessage` 通信
-- 不引入第三方库
-- 不改变现有下载管理的 UI 与交互
+- Must keep the MV3 architecture using `chrome.storage.session` + `chrome.sendMessage`.
+- No third-party libraries.
+- Do not change the existing download-management UI or interactions.
 
-**不做的事（Non-goals）**
+**Non-goals**
 
-- 不做下载速度/断点续传相关优化
-- 不重构 `bg.js`
+- No download-speed / resume optimizations.
+- Do not refactor `bg.js`.
 
-## 上下文与背景
+## Context
 
-**背景（Background）**
+**Background**
 
-NDM 扩展采用 MV3 架构，`ct.js`（内容脚本）负责拦截下载链接，`bg.js`（Service Worker）负责网络监控与跨上下文通信。用户希望针对特定文件类型收紧拦截规则，但担心影响现有功能。
+The NDM extension uses MV3. `ct.js` (content script) intercepts download links; `bg.js` (service worker) handles network monitoring and cross-context communication. The user wants tighter interception rules for specific file types, but worries about affecting existing features.
 
-**关键决策（Key Decisions）**
+**Key Decisions**
 
-- 决策：过滤逻辑放在 `ct.js` 而非 `bg.js` → 理由：拦截发生在内容脚本层，改动局部、风险可控，符合"不影响其他功能"的要求
-- 决策：用 `chrome.storage.session` 缓存过滤规则 → 理由：MV3 下 Service Worker 可能休眠，session 存储是最可靠的跨上下文方案
+- Decision: put filtering logic in `ct.js`, not `bg.js` → Reason: interception happens at the content-script layer, so a local change is lower risk and matches "do not affect other features".
+- Decision: cache the filter rule via `chrome.storage.session` → Reason: under MV3 the service worker may sleep; session storage is the most reliable cross-context option.
 
-**假设（Assumptions）**
+**Assumptions**
 
-- 假设当前版本 `ct.js` 的拦截入口集中在单一函数（尚未逐行确认）
+- The current `ct.js` concentrates interception in a single entry function (not yet confirmed line by line).
 
-**术语（Terminology）**
+**Terminology**
 
-- `ct.js`：内容脚本，负责拦截下载链接
-- `bg.js`：Service Worker，负责网络监控与跨上下文通信
+- `ct.js`: content script that intercepts download links
+- `bg.js`: service worker that monitors network and handles cross-context communication
 
-## 进度
+## Progress
 
-**已完成（Completed）**
+**Completed**
 
-- 梳理了 ct.js 与 bg.js 的职责划分与通信机制
-- 定位到下载拦截的代码路径
+- Mapped the responsibilities and communication between `ct.js` and `bg.js`.
+- Located the download-interception code path.
 
-**进行中（In Progress）**
+**In Progress**
 
-- 正在分析 `ct.js` 中拦截函数的具体实现，逐行拆解
+- Analyzing the interception function in `ct.js` line by line.
 
-**下一步（Next Steps）**
+**Next Steps**
 
-1. [优先级 1] 确认 `ct.js` 中拦截入口函数的具体位置与行号
-2. [优先级 2] 设计文件类型过滤的插入点
-3. [优先级 3] 实现过滤逻辑并做最小化改动
+1. [priority 1] Confirm the location and line numbers of the interception entry function in `ct.js`.
+2. [priority 2] Design the insertion point for file-type filtering.
+3. [priority 3] Implement the filtering logic with minimal changes.
 
-**阻塞项（Blockers）**
+**Blockers**
 
-- 无
+- None.
 
-**风险（Risks）**
+**Risks**
 
-- 过滤规则缓存键命名不当可能导致与现有 session 数据冲突 → 用独立命名空间规避
+- A filter-rule cache key-name collision with existing session data — avoid by using a dedicated namespace.
 
-## 工件与依赖
+## Artifacts
 
-**关键文件（Files）**
+**Files**
 
-- `F:\dev\ndm-extension\ct.js` — 内容脚本，拦截下载链接，需在此新增过滤逻辑
-- `F:\dev\ndm-extension\bg.js` — Service Worker，本次不改动
-- `F:\dev\ndm-extension\manifest.json` — 扩展清单，若新增权限需同步
+- `F:\dev\ndm-extension\ct.js` — content script that intercepts download links; add filtering logic here.
+- `F:\dev\ndm-extension\bg.js` — service worker; not changed in this task.
+- `F:\dev\ndm-extension\manifest.json` — extension manifest; sync if new permissions are added.
 
-**外部依赖（Dependencies）**
+**Dependencies**
 
-- Chrome 浏览器（含 NDM 扩展，用于手工测试）
+- Chrome (with the NDM extension) — install the latest stable Chrome and load the NDM extension for manual testing.
 
-**运行环境（Environment）**
+**Environment**
 
 - Windows 11
-- Chrome 最新稳定版（MV3 支持）
+- Chrome latest stable (MV3 support)
 
-**关键命令（Commands）**
+**Commands**
 
 ```bash
-# 在 chrome://extensions 中重新加载扩展以应用改动
+# Reload the extension in chrome://extensions to apply changes.
 ```
 
-## 恢复指引（如何接手）
+## Resume
 
-**如何接续（How to Resume）**
+**How to Resume**
 
-1. 打开 `F:\dev\ndm-extension\ct.js`，找到下载拦截入口函数（约在文件后半段）。
-2. 从"下一步"的第一项开始：确认入口函数位置与行号。
-3. 改动前先跑一遍现有拦截，确认基线行为。
+1. Open `F:\dev\ndm-extension\ct.js` and find the interception entry function (roughly in the second half of the file).
+2. Continue from the first `next_steps` item: confirm the entry function's location and line numbers.
+3. Run the existing interception once before changes to confirm baseline behavior.
 
-**联系（Contact）**
+**Contact**
 
-任务发起者（可通过原对话/工作台联系）
+Task owner (reachable via the original conversation / workbench).
 
-**交接备注（Handoff Notes）**
+**Handoff Notes**
 
-- 用户偏好详细技术解释：回复需含架构图、逐行代码分解、文件路径与行号标注、方案对比表格。
-- 通信机制上 `chrome.storage.session` 优于 `chrome.sendMessage`（MV3 可靠性更高），新代码沿用 session 方案。
+- The user prefers detailed technical explanations: architecture diagrams, line-by-line code breakdown, file paths with line numbers, and comparison tables.
+- For communication, `chrome.storage.session` is preferred over `chrome.sendMessage` (more reliable under MV3); new code should reuse the session approach.

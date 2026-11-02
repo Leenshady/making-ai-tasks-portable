@@ -1,7 +1,5 @@
 # 安装指南（Install Guide）
 
-`task-portability` 是一个**跨平台可移植**的 AI Skill。它的核心资产是 `SKILL.md` 里的方法论 + `schema.json` 校验规范 + 模板，**不依赖任何单一工作台或模型**。
-
 ---
 
 # 中文说明（Chinese）

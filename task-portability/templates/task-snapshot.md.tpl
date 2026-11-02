@@ -1,107 +1,107 @@
-# 任务快照
+# Task Snapshot
 
-> 本文件是任务的自包含状态快照。**任意 AI 或人读这一份即可接手该任务**，无需回看历史对话。
-> 配套结构数据见 `task-snapshot.json`，两者描述同一份状态。
+> This file is the task's self-contained state snapshot. **Any AI or person can resume the task by reading this one file** — no need to revisit past conversation history.
+> The structured counterpart is `task-snapshot.json`; both describe the same state.
 
-## 身份与元信息
+## Identity & Meta
 
-| 字段 | 值 |
+| Field | Value |
 |---|---|
-| 任务 ID | `{{task_id}}` |
-| 标题 | {{title}} |
-| 状态 | {{status}} |
-| 创建时间 | {{created_at}} |
-| 更新时间 | {{updated_at}} |
-| 快照版本 | {{schema_version}} |
+| Task ID | `{{task_id}}` |
+| Title | {{title}} |
+| Status | {{status}} |
+| Created At | {{created_at}} |
+| Updated At | {{updated_at}} |
+| Schema Version | {{schema_version}} |
 
-## 目标
+## Goal
 
-**目标（Goal）**
+**Goal**
 
 {{goal}}
 
-**成功标准（Success Criteria）**
+**Success Criteria**
 
 - {{success_criteria_1}}
 
-**约束（Constraints）**
+**Constraints**
 
 - {{constraints_1}}
 
-**不做的事（Non-goals）**
+**Non-goals**
 
 - {{non_goals_1}}
 
-## 上下文与背景
+## Context
 
-**背景（Background）**
+**Background**
 
 {{background}}
 
-**关键决策（Key Decisions）**
+**Key Decisions**
 
-- 决策：{{decision_1}} → 理由：{{reason_1}}
+- Decision: {{decision_1}} → Reason: {{reason_1}}
 
-**假设（Assumptions）**
+**Assumptions**
 
 - {{assumptions_1}}
 
-**术语（Terminology）**
+**Terminology**
 
-- `{{term_1}}`：{{term_def_1}}
+- `{{term_1}}`: {{term_def_1}}
 
-## 进度
+## Progress
 
-**已完成（Completed）**
+**Completed**
 
 - {{completed_1}}
 
-**进行中（In Progress）**
+**In Progress**
 
 - {{in_progress_1}}
 
-**下一步（Next Steps）**
+**Next Steps**
 
-1. [优先级 {{priority_1}}] {{action_1}}
+1. [priority {{priority_1}}] {{action_1}}
 
-**阻塞项（Blockers）**
+**Blockers**
 
 - {{blockers_1}}
 
-**风险（Risks）**
+**Risks**
 
 - {{risks_1}}
 
-## 工件与依赖
+## Artifacts
 
-**关键文件（Files）**
+**Files**
 
 - `{{file_path_1}}` — {{file_desc_1}}
 
-**外部依赖（Dependencies）**
+**Dependencies**
 
-- {{dep_name_1}}：{{dep_how_1}}
+- {{dep_name_1}}: {{dep_how_1}}
 
-**运行环境（Environment）**
+**Environment**
 
 - {{env_1}}
 
-**关键命令（Commands）**
+**Commands**
 
 ```bash
 {{commands_1}}
 ```
 
-## 恢复指引（如何接手）
+## Resume
 
-**如何接续（How to Resume）**
+**How to Resume**
 
 {{how_to_resume}}
 
-**联系（Contact）**
+**Contact**
 
 {{contact}}
 
-**交接备注（Handoff Notes）**
+**Handoff Notes**
 
 - {{handoff_note_1}}
