@@ -18,12 +18,10 @@ allowed-tools:
 examples_zh:
   - "把这个任务快照一下"
   - "开始一个可迁移的任务"
-  - "我要换个环境继续做这个任务，帮我打包迁移"
   - "把这个任务交接给别人"
 examples_en:
   - "Snapshot this task's current state"
   - "Start a portable task"
-  - "Package this task for migration to another environment"
   - "Hand off this task to someone else"
 ---
 
