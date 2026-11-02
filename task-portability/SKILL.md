@@ -25,7 +25,6 @@ examples_en:
   - "Start a portable task"
   - "Package this task for migration to another environment"
   - "Hand off this task to someone else"
-visibility: "private"
 ---
 
 # Task Portability — 让 AI 任务可移植、可迁移、可接续
