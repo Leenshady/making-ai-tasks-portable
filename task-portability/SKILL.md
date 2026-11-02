@@ -43,7 +43,7 @@ examples_en:
 
 ## 产出物：任务快照包（Task Bundle）
 
-> 生成快照前，先参考 `@references/example-snapshot.md` 中一份合格快照的完整示例，确保字段齐全、语气一致。
+> 生成快照前，先参考 `@references/example-snapshot.md` 中一份合格快照的完整示例，确保字段齐全、语气一致。关键术语的中英对照见 `@references/glossary.md`，跨语言接手时按此保持语义一致。
 
 每次快照都在一个目录下产出两个互补文件：
 
