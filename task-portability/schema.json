@@ -17,20 +17,45 @@
     "schema_version": {
       "type": "string",
       "description": "Version of this snapshot schema.",
-      "const": "1.0.0"
+      "const": "1.0.0",
+      "examples": ["1.0.0"]
     },
     "identity": {
       "type": "object",
       "required": ["task_id", "title", "slug", "created_at", "updated_at", "status"],
       "properties": {
-        "task_id": { "type": "string" },
-        "title": { "type": "string" },
-        "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
-        "created_at": { "type": "string", "format": "date-time" },
-        "updated_at": { "type": "string", "format": "date-time" },
+        "task_id": {
+          "type": "string",
+          "description": "Unique task identifier, format task-YYYYMMDD-HHMM.",
+          "examples": ["task-20261102-1530"]
+        },
+        "title": {
+          "type": "string",
+          "description": "One-line task title.",
+          "examples": ["Adjust download interception strategy for the NDM extension"]
+        },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "Filesystem-safe short name (lowercase, hyphens).",
+          "examples": ["ndm-download-filter"]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp, obtained via the `date` command.",
+          "examples": ["2026-11-02T14:00:00+08:00"]
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of the last update, obtained via the `date` command.",
+          "examples": ["2026-11-02T15:30:00+08:00"]
+        },
         "status": {
           "type": "string",
-          "enum": ["initialized", "in-progress", "checkpointed", "completed", "abandoned"]
+          "enum": ["initialized", "in-progress", "checkpointed", "completed", "abandoned"],
+          "examples": ["in-progress"]
         }
       }
     },
@@ -38,18 +63,34 @@
       "type": "object",
       "required": ["goal", "success_criteria"],
       "properties": {
-        "goal": { "type": "string" },
+        "goal": {
+          "type": "string",
+          "description": "The end result, written as a verifiable statement.",
+          "examples": ["Adjust the NDM extension's download interception to support file-type filtering, without affecting other features (download management, status monitoring)."]
+        },
         "success_criteria": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "type": "string" },
+          "description": "Observable, testable criteria for 'done'.",
+          "examples": [
+            ["MP4 files are intercepted, other file types pass through normally."]
+          ]
         },
         "constraints": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "type": "string" },
+          "description": "Hard limits (tech stack, prohibitions, compliance, scope).",
+          "examples": [
+            ["Must keep MV3 architecture using chrome.storage.session + chrome.sendMessage."]
+          ]
         },
         "non_goals": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "type": "string" },
+          "description": "Explicitly out of scope, to prevent the successor from drifting.",
+          "examples": [
+            ["Do not refactor bg.js."]
+          ]
         }
       }
     },
@@ -57,46 +98,101 @@
       "type": "object",
       "required": ["background"],
       "properties": {
-        "background": { "type": "string" },
+        "background": {
+          "type": "string",
+          "description": "Why this task exists, prior context.",
+          "examples": ["The NDM extension uses MV3; ct.js (content script) intercepts download links, bg.js (service worker) monitors network and handles cross-context communication."]
+        },
         "key_decisions": {
           "type": "array",
           "items": {
             "type": "object",
             "required": ["decision", "reason"],
             "properties": {
-              "decision": { "type": "string" },
-              "reason": { "type": "string" }
+              "decision": {
+                "type": "string",
+                "examples": ["Put filtering logic in ct.js, not bg.js."]
+              },
+              "reason": {
+                "type": "string",
+                "examples": ["Interception happens at the content-script layer; a local change is lower risk."]
+              }
             }
-          }
+          },
+          "description": "Decisions already made, each with its reason."
         },
         "assumptions": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "type": "string" },
+          "description": "Current assumptions, including unverified ones.",
+          "examples": [
+            ["The current ct.js has a single interception entry function (not yet confirmed line by line)."]
+          ]
         },
         "terminology": {
           "type": "object",
-          "additionalProperties": { "type": "string" }
+          "additionalProperties": { "type": "string" },
+          "description": "Domain terms and conventions, keyed by term.",
+          "examples": [
+            { "ct.js": "Content script that intercepts download links." }
+          ]
         }
       }
     },
     "progress": {
       "type": "object",
       "properties": {
-        "completed": { "type": "array", "items": { "type": "string" } },
-        "in_progress": { "type": "array", "items": { "type": "string" } },
+        "completed": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Done items (specific, verifiable).",
+          "examples": [
+            ["Mapped the responsibilities and communication of ct.js and bg.js."]
+          ]
+        },
+        "in_progress": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Current work and how far it has gone.",
+          "examples": [
+            ["Analyzing the interception function in ct.js line by line."]
+          ]
+        },
         "next_steps": {
           "type": "array",
           "items": {
             "type": "object",
             "required": ["priority", "action"],
             "properties": {
-              "priority": { "type": "integer" },
-              "action": { "type": "string" }
+              "priority": {
+                "type": "integer",
+                "description": "Order, 1 = highest.",
+                "examples": [1]
+              },
+              "action": {
+                "type": "string",
+                "examples": ["Confirm the location and line numbers of the interception entry function in ct.js."]
+              }
             }
-          }
+          },
+          "description": "Concrete next actions, ordered by priority."
         },
-        "blockers": { "type": "array", "items": { "type": "string" } },
-        "risks": { "type": "array", "items": { "type": "string" } }
+        "blockers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Blockers, open questions, required inputs.",
+          "examples": [
+            ["None."]
+          ]
+        },
+        "risks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Potential risks and mitigations.",
+          "examples": [
+            ["A filter-cache key name collision with existing session data — avoid by using a dedicated namespace."]
+          ]
+        }
       }
     },
     "artifacts": {
@@ -108,10 +204,18 @@
             "type": "object",
             "required": ["path", "description"],
             "properties": {
-              "path": { "type": "string" },
-              "description": { "type": "string" }
+              "path": {
+                "type": "string",
+                "description": "Absolute path.",
+                "examples": ["F:\\dev\\ndm-extension\\ct.js"]
+              },
+              "description": {
+                "type": "string",
+                "examples": ["Content script that intercepts download links; add filtering logic here."]
+              }
             }
-          }
+          },
+          "description": "Key files involved/produced — absolute path + description, no file bodies."
         },
         "dependencies": {
           "type": "array",
@@ -119,18 +223,33 @@
             "type": "object",
             "required": ["name", "how_to_obtain"],
             "properties": {
-              "name": { "type": "string" },
-              "how_to_obtain": { "type": "string" }
+              "name": {
+                "type": "string",
+                "examples": ["Chrome (with the NDM extension)"]
+              },
+              "how_to_obtain": {
+                "type": "string",
+                "examples": ["Install the latest stable Chrome and load the NDM extension."]
+              }
             }
-          }
+          },
+          "description": "External dependencies and how to obtain them."
         },
         "environment": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "type": "string" },
+          "description": "Runtime requirements (OS, runtime, versions).",
+          "examples": [
+            ["Windows 11", "Chrome latest stable (MV3 support)"]
+          ]
         },
         "commands": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "type": "string" },
+          "description": "Key commands/operations (reproducible).",
+          "examples": [
+            ["Reload the extension in chrome://extensions to apply changes."]
+          ]
         }
       }
     },
@@ -138,9 +257,24 @@
       "type": "object",
       "required": ["how_to_resume"],
       "properties": {
-        "how_to_resume": { "type": "string" },
-        "contact": { "type": "string" },
-        "handoff_notes": { "type": "array", "items": { "type": "string" } }
+        "how_to_resume": {
+          "type": "string",
+          "description": "The FIRST thing a successor should do, and where to continue from.",
+          "examples": ["Open F:\\dev\\ndm-extension\\ct.js, find the interception entry function, and continue from the first next_step."]
+        },
+        "contact": {
+          "type": "string",
+          "description": "How to reach the task owner on ambiguity.",
+          "examples": ["Task owner (via the original conversation / workbench)."]
+        },
+        "handoff_notes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tacit knowledge that only word of mouth would convey.",
+          "examples": [
+            ["The user prefers detailed technical explanations with architecture diagrams and code breakdowns."]
+          ]
+        }
       }
     }
   }
