@@ -4,6 +4,9 @@ description: "Decouple AI tasks from any specific workbench, model, or platform 
 description_zh: "将 AI 任务从具体工作台/模型/平台中解耦，把任务完整状态固化成可移植的自包含快照（Markdown + JSON），让任意 AI 或人可在任意环境以最小迁移成本接续任务。"
 description_en: "Decouple AI tasks from workbench/model/platform by snapshotting task state into portable bundles."
 version: 1.0.0
+author: "Leenshady"
+display_name: "任务可移植"
+display_name_en: "Task Portability"
 allowed-tools:
   - Read
   - Write
@@ -12,8 +15,16 @@ allowed-tools:
   - Glob
   - Bash
   - AskUserQuestion
-display_name: "task-portability"
-display_name_en: "task-portability"
+examples_zh:
+  - "把这个任务快照一下"
+  - "开始一个可迁移的任务"
+  - "我要换个环境继续做这个任务，帮我打包迁移"
+  - "把这个任务交接给别人"
+examples_en:
+  - "Snapshot this task's current state"
+  - "Start a portable task"
+  - "Package this task for migration to another environment"
+  - "Hand off this task to someone else"
 visibility: "private"
 ---
 
@@ -32,6 +43,10 @@ visibility: "private"
 只要这三样被**冻结成自包含的数据**，任务就不再被任何单一环境绑架。快照本身就是"可迁移的任务"。
 
 ## 产出物：任务快照包（Task Bundle）
+
+> 生成快照前，先参考 `@references/example-snapshot.md` 中一份合格快照的完整示例，确保字段齐全、语气一致。
+
+每次快照都在一个目录下产出两个互补文件：
 
 每次快照都在一个目录下产出两个互补文件：
 

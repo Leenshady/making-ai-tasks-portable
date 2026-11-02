@@ -57,6 +57,6 @@ task-portability/
 ├── schema.json            # 快照 JSON 的校验 Schema
 ├── templates/
 │   └── task-snapshot.md.tpl  # Markdown 快照模板
-└── examples/
+└── references/
     └── example-snapshot.md   # 示例快照（成品长什么样）
 ```

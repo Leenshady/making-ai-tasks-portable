@@ -20,7 +20,7 @@
 | └ `SKILL.md` | skill 主体（方法论 + 工作流 + 硬性规则） |
 | └ `schema.json` | 快照 JSON 的校验 Schema |
 | └ `templates/` | Markdown 快照模板 |
-| └ `examples/` | 示例快照（成品长什么样） |
+| └ `references/` | 示例快照（成品长什么样） |
 
 ## 快照产出
 
