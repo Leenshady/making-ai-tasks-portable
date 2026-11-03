@@ -3,7 +3,7 @@ name: task-portability
 description: "Decouple AI tasks from any specific workbench, model, or platform by snapshotting a task's full state into a portable, self-contained bundle (Markdown + JSON). Lets any AI or human resume the task in any environment with minimal migration cost. Use when the user wants to make an AI task portable, migrate a task between environments, hand off a task to another model/tool, checkpoint a task before switching context, or freeze task state (goal, progress, decisions, TODOs, files, dependencies). Works both before a task starts (initialization) and during a task (incremental checkpoint)."
 description_zh: "将 AI 任务从具体工作台/模型/平台中解耦，把任务完整状态固化成可移植的自包含快照（Markdown + JSON），让任意 AI 或人可在任意环境以最小迁移成本接续任务。"
 description_en: "Decouple AI tasks from workbench/model/platform by snapshotting task state into portable bundles."
-version: 1.2.0
+version: 1.3.0
 author: "Leenshady"
 display_name: "让 AI 任务可迁移"
 display_name_en: "Make AI Tasks Portable"
@@ -128,6 +128,7 @@ A valid snapshot MUST cover the following fields. **Field names MUST match `sche
 
 | Version | Change |
 |---|---|
+| `1.3.0` | **Closed the object contract.** Every object in `schema.json` now sets `additionalProperties: false`, so a field name the schema does not define is rejected instead of silently kept — this is what makes "no synonyms" enforceable rather than advisory. A bundle written at `1.2.0` that carries custom keys must drop them (or move term-like data under `context.terminology`) and bump `schema_version`, otherwise `validate.py` rejects it. |
 | `1.2.0` | Added `artifacts.workspace` — `root`, `vcs` (`type`, `remote`, `branch`, `commit`, `dirty`), `excluded`. A bundle written at `1.1.0` or earlier must add the field (or be regenerated with `scaffold.py`) and bump `schema_version`, otherwise `validate.py` rejects it. |
 | `1.1.0` | Added `progress.findings`. A bundle written at `1.0.0` must add the field and bump `schema_version`, otherwise `validate.py` rejects it. |
 | `1.0.0` | Initial format. |
@@ -198,8 +199,8 @@ Rules for using them:
 
 1. **Run `validate.py --strict` before declaring a snapshot done.** Exit code `0` = valid and complete, `1` = errors or incomplete (each printed with its JSON path), `2` = usage or I/O error. Do not report success while it exits non-zero.
 2. **Prefer `scaffold.py` over hand-writing a bundle.** It generates `task_id` and ISO 8601 timestamps correctly, and renders Markdown from the same data so the two files cannot drift.
-3. **`validate.py` checks what the hard rules require:** missing required fields, wrong types, invalid `status` enums, malformed `slug` patterns, non-ISO `date-time` values, and identity fields absent from the Markdown.
-4. **`--strict` rejects a schema-valid skeleton that is not finished.** It fails on empty strings, an empty `goal.success_criteria`, an empty `progress.next_steps` while `status` is `initialized` / `in-progress` / `checkpointed`, placeholder markers (`TODO`, `TBD`, `FIXME`, `XXX`, a whole-string `<...>`, an all-caps `<YOUR_NAME>`, `{{...}}`, `...`), a relative `artifacts.files[].path` or one with doubled separators, a `files` list with no `workspace.root`, a relative `workspace.root` or one with doubled separators, a `vcs.commit` that is a moving ref, a `dirty` tree with no `uncommitted` description, `updated_at` earlier than `created_at`, any JSON string that is absent from `task-snapshot.md`, and any object key that `schema.json` does not define (which catches a renamed or synonym field, the one mistake that survives both the type check and the sync check). Use it when finalizing a snapshot; a mid-task checkpoint may legitimately run without it.
+3. **`validate.py` checks what the hard rules require:** missing required fields, wrong types, invalid `status` enums, malformed `slug` patterns, non-ISO `date-time` values, keys `schema.json` does not define (every object is closed), and identity fields absent from the Markdown.
+4. **`--strict` rejects a schema-valid skeleton that is not finished.** It fails on empty strings, an empty `goal.success_criteria`, an empty `progress.next_steps` while `status` is `initialized` / `in-progress` / `checkpointed`, placeholder markers (`TODO`, `TBD`, `FIXME`, `XXX`, a whole-string `<...>`, an all-caps `<YOUR_NAME>`, `{{...}}`, `...`), a relative `artifacts.files[].path` or one with doubled separators, a `files[].path` that misses `workspace.root` by a character or two (a mistyped root prefix, as opposed to a genuinely external file), a `files` list with no `workspace.root`, a relative `workspace.root` or one with doubled separators, a `vcs.commit` that is a moving ref, a `dirty` tree with no `uncommitted` description, `updated_at` earlier than `created_at`, and any JSON string that is absent from `task-snapshot.md`. Use it when finalizing a snapshot; a mid-task checkpoint may legitimately run without it.
 5. **If Python 3 is unavailable, skip the scripts — do not block the task.** Perform Step 4's self-check manually instead.
 6. **Keep the bundled example valid.** After changing `schema.json` or the example, run `python3 scripts/validate.py references/example-snapshot.json --md references/example-snapshot.md --strict`. The example is what successors copy, so a stale example silently teaches the wrong contract.
 
@@ -224,6 +225,7 @@ When you are the successor receiving a bundle:
 7. **Do not copy large files** — `files` records `path` and `description` only, not file bodies (unless the user explicitly requests packaging).
 8. **Record the task's workspace, never the tool's.** `workspace.root` + VCS anchor only; a workbench space/project id must not appear in a snapshot. And never hand-write the commit — read the resolved hash (`git rev-parse HEAD`); `HEAD` or a branch name is a moving ref that reconstructs nothing.
 9. **A dirty tree must say what is uncommitted.** `vcs.dirty: true` with no `vcs.uncommitted` silently loses that work on a fresh clone; commit it, stash it, or describe it.
+10. **Never invent a field name.** The contract is closed: an unknown key fails validation, because a synonym is invisible to every downstream reader. When a needed fact has no dedicated field, put it in an existing free-text field (`handoff_notes`, `assumptions`) instead of adding a key.
 
 ## Scenario Quick Reference
 

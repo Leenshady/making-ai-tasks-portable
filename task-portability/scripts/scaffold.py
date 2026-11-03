@@ -25,6 +25,23 @@ from datetime import datetime
 STATUS_CHOICES = ["initialized", "in-progress", "checkpointed", "completed", "abandoned"]
 
 
+def current_schema_version(default="1.3.0"):
+    """Read the format version from the bundled schema.json.
+
+    schema.json is the single source of truth for the version; a hardcoded copy
+    here drifts silently the first time the format is bumped, and validate.py
+    then rejects every freshly scaffolded bundle.
+    """
+    path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "schema.json"
+    )
+    try:
+        with open(path, encoding="utf-8") as handle:
+            return json.load(handle)["properties"]["schema_version"]["const"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return default
+
+
 def detect_vcs(root):
     """Return a vcs dict for root, or None when there is no repository.
 
@@ -310,7 +327,7 @@ def build_snapshot(title, goal, slug, status, background, how_to_resume, workspa
         workspace["vcs"] = vcs
 
     return {
-        "schema_version": "1.2.0",
+        "schema_version": current_schema_version(),
         "identity": {
             "task_id": "task-%s" % stamp,
             "title": title,

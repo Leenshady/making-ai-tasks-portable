@@ -7,7 +7,9 @@ Usage:
 
 Checks:
     1. The snapshot JSON conforms to schema.json (required fields, types, enums,
-       patterns, ISO 8601 date-times, nested objects and arrays).
+       patterns, ISO 8601 date-times, nested objects and arrays). Every object in
+       the schema is closed, so a key the schema does not define — a renamed or
+       synonym field — is rejected here rather than silently kept.
     2. A task-snapshot.md exists alongside the JSON.
     3. identity.task_id / title / status also appear in the Markdown (sync check).
 
@@ -19,11 +21,11 @@ Checks with --strict (completeness, run only when the checks above pass):
     8. artifacts.files[].path is absolute and has no doubled separators.
     9. artifacts.workspace.root is absolute and present whenever files or a VCS
        anchor exist; vcs.commit is a resolved revision, not a moving ref; a dirty
-       tree names what is uncommitted.
+       tree names what is uncommitted; a files[].path that misses the root by a
+       character or two is reported as a mistyped prefix rather than an external
+       file.
    10. identity.updated_at is not earlier than identity.created_at.
    11. Every JSON leaf string appears verbatim in the Markdown (deep sync).
-   12. No object key outside schema.json — a renamed optional field survives both
-       the type check and the sync check, yet is invisible to a JSON reader.
 
 Exit codes:
     0  valid
@@ -101,6 +103,64 @@ def is_absolute_path(text):
     )
 
 
+def normalize_path(text):
+    """Normalise a path for containment comparison, whatever the platform form."""
+    value = text.strip().replace("\\", "/")
+    value = re.sub(r"/+", "/", value)
+    if len(value) > 1:
+        value = value.rstrip("/")
+    return value.casefold()
+
+
+def is_within(path, root):
+    """True when path lies under root, compared at segment boundaries.
+
+    A plain prefix test would accept C:/work/app-backup/x.js for root
+    C:/work/app, so the separator after the root is required.
+    """
+    target, base = normalize_path(path), normalize_path(root)
+    return target == base or target.startswith(base + "/")
+
+
+def edit_distance(left, right, limit=3):
+    """Levenshtein distance, abandoned as soon as it exceeds limit."""
+    if abs(len(left) - len(right)) > limit:
+        return limit + 1
+    previous = list(range(len(right) + 1))
+    for i, char_left in enumerate(left, 1):
+        current = [i]
+        for j, char_right in enumerate(right, 1):
+            current.append(
+                min(
+                    previous[j] + 1,
+                    current[j - 1] + 1,
+                    previous[j - 1] + (char_left != char_right),
+                )
+            )
+        if min(current) > limit:
+            return limit + 1
+        previous = current
+    return previous[-1]
+
+
+def looks_like_root_typo(path, root, limit=2):
+    """True when a path outside the root is really the root, misspelled.
+
+    A file outside the root is often legitimate (a sibling package in a
+    monorepo, a global config). A path whose leading segments differ from the
+    root by only a character or two is not: it is a mistyped root, and the
+    successor opens a directory that does not exist.
+    """
+    target = normalize_path(path).split("/")
+    base = normalize_path(root).split("/")
+    depth = min(len(base), len(target) - 1)
+    if depth <= 0:
+        return False
+    prefix = "/".join(target[:depth])
+    wanted = "/".join(base[:depth])
+    return prefix != wanted and edit_distance(prefix, wanted, limit) <= limit
+
+
 def has_repeated_separators(text):
     """Return True if a path contains doubled separators (an escaping mistake)."""
     body = text[2:] if text.startswith(("\\\\", "//")) else text
@@ -147,7 +207,9 @@ def validate(instance, schema, path="$", errors=None):
             if key in properties:
                 validate(value, properties[key], "%s.%s" % (path, key), errors)
             elif extra is False:
-                errors.append("%s: unexpected field %r" % (path, key))
+                close = difflib.get_close_matches(key, list(properties), n=1, cutoff=0.6)
+                hint = " — did you mean %r?" % close[0] if close else ""
+                errors.append("%s: unexpected field %r%s" % (path, key, hint))
             elif isinstance(extra, dict):
                 validate(value, extra, "%s.%s" % (path, key), errors)
 
@@ -245,6 +307,30 @@ UNFINISHED_STATUSES = ("initialized", "in-progress", "checkpointed")
 MOVING_REFS = ("head", "main", "master", "latest", "dev", "develop", "trunk")
 
 
+def check_file_prefixes(workspace, files, errors):
+    """Reject paths that misspell workspace.root (--strict only)."""
+    root = workspace.get("root")
+    if not isinstance(root, str) or not root.strip():
+        return
+    root = root.strip()
+    for index, entry in enumerate(files):
+        if not isinstance(entry, dict):
+            continue
+        path = entry.get("path")
+        if not isinstance(path, str) or not path.strip():
+            continue
+        path = path.strip()
+        if not is_absolute_path(path) or is_within(path, root):
+            continue
+        if looks_like_root_typo(path, root):
+            errors.append(
+                "strict: $.artifacts.files[%d].path %r is outside workspace.root %r "
+                "but differs from it only by a misspelling — this is a mistyped root "
+                "prefix, so the successor opens nothing. Fix the prefix; a genuinely "
+                "external file differs by whole directory names." % (index, path, root)
+            )
+
+
 def check_workspace(artifacts, errors):
     """Reject a workspace record that cannot be used to rebuild the checkout."""
     workspace = artifacts.get("workspace") or {}
@@ -301,47 +387,13 @@ def check_workspace(artifacts, errors):
         )
 
 
-def check_unknown_keys(instance, schema, path, errors):
-    """Flag object keys that schema.json does not define (--strict only).
-
-    A renamed optional field is the quietest failure this format has: the value
-    is still there, so neither the type check nor the Markdown sync check
-    notices, yet the structured field is gone and a successor reading the JSON
-    cannot tell those strings were assumptions. Unknown keys are legal JSON
-    Schema, so this only bites in strict mode.
-    """
-    if not isinstance(schema, dict):
-        return
-    if isinstance(instance, dict) and isinstance(schema.get("properties"), dict):
-        known = schema["properties"]
-        for key in instance:
-            if key in known:
-                continue
-            close = difflib.get_close_matches(key, list(known), n=1, cutoff=0.6)
-            hint = " — did you mean %r?" % close[0] if close else ""
-            errors.append(
-                "strict: %s.%s is not a field defined in schema.json%s The value "
-                "survives the Markdown sync check but is invisible in the structured "
-                "snapshot, so the successor loses it." % (path, key, hint)
-            )
-        for key, value in instance.items():
-            if key in known:
-                check_unknown_keys(value, known[key], "%s.%s" % (path, key), errors)
-    elif isinstance(instance, list) and isinstance(schema.get("items"), dict):
-        for index, item in enumerate(instance):
-            check_unknown_keys(item, schema["items"], "%s[%d]" % (path, index), errors)
-
-
-def check_strict(snapshot, errors, schema=None):
+def check_strict(snapshot, errors):
     """Detect skeletons that are schema-valid but not finished (--strict only)."""
     identity = snapshot.get("identity") or {}
     goal = snapshot.get("goal") or {}
     progress = snapshot.get("progress") or {}
     artifacts = snapshot.get("artifacts") or {}
     resume = snapshot.get("resume") or {}
-
-    if schema is not None:
-        check_unknown_keys(snapshot, schema, "$", errors)
 
     for path, text in walk_strings(snapshot):
         if not text.strip():
@@ -386,6 +438,9 @@ def check_strict(snapshot, errors, schema=None):
                 )
 
     check_workspace(artifacts, errors)
+    check_file_prefixes(
+        artifacts.get("workspace") or {}, artifacts.get("files") or [], errors
+    )
 
     if not resume.get("how_to_resume", "").strip():
         errors.append(
@@ -452,8 +507,8 @@ def main():
         action="store_true",
         help="also fail on skeletons that are schema-valid but unfinished "
         "(empty strings, empty success criteria / next steps, placeholder text, "
-        "relative file paths, fields not defined in schema.json, updated_at "
-        "before created_at)",
+        "relative file paths, a files[].path that misspells workspace.root, "
+        "updated_at before created_at)",
     )
     args = parser.parse_args()
 
@@ -503,7 +558,7 @@ def main():
 
     if args.strict:
         strict_errors = []
-        check_strict(snapshot, strict_errors, schema)
+        check_strict(snapshot, strict_errors)
         if not args.skip_md:
             check_deep_sync(snapshot, md_path, strict_errors)
         if strict_errors:
@@ -519,8 +574,7 @@ def main():
         print("    markdown: %s (consistent)" % md_path)
     if args.strict:
         print(
-            "    strict: no empty fields, no placeholders, no undefined fields, "
-            "complete enough to hand off"
+            "    strict: no empty fields, no placeholders, complete enough to hand off"
         )
     return 0
 

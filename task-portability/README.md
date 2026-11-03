@@ -50,6 +50,7 @@ Each snapshot produces a **task snapshot bundle**:
 4. **Decisions always carry their rationale** — decisions + reasons are the most easily lost, most valuable asset.
 5. **Tacit knowledge must be written down** — things "only known by word of mouth" go into the handoff notes.
 6. **Workspace anchored to the repo** — record the project root plus `remote` + `branch` + the resolved commit hash: any environment can rebuild that with a clone, while a workbench's space / project id dies with the tool.
+7. **One field name, no synonyms** — `schema.json` is a closed contract: an extra or misspelled key fails validation, because a synonym that feels natural to a human is silent data loss for every downstream reader.
 
 ## File Structure
 
@@ -75,7 +76,7 @@ Python 3 standard library only — no `pip install`. The snapshot itself never d
 
 | Command | Purpose |
 |---|---|
-| `python3 scripts/validate.py <bundle-dir> [--strict]` | Validate JSON against `schema.json` + Markdown sync check; `--strict` also fails on unfinished skeletons (empty fields, placeholders, relative paths) and on field names that `schema.json` does not define |
+| `python3 scripts/validate.py <bundle-dir> [--strict]` | Validate JSON against `schema.json` (a closed contract: unknown fields are rejected) + Markdown sync check; `--strict` also fails on unfinished skeletons (empty fields, placeholders, relative paths, a path that misspells `workspace.root`) |
 | `python3 scripts/validate.py references/example-snapshot.json --md references/example-snapshot.md --strict` | Self-check the bundled example; run it after touching `schema.json` or the example |
 | `python3 scripts/scaffold.py --title "T" --goal "G"` | Create a bundle skeleton with auto timestamps |
 | `python3 scripts/bundle.py <bundle-dir> -o out.zip` | Package a bundle for migration |

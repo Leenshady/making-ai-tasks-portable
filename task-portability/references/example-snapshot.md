@@ -12,7 +12,7 @@
 | Status | in-progress |
 | Created At | 2026-11-02T14:00:00+08:00 |
 | Updated At | 2026-11-02T15:30:00+08:00 |
-| Schema Version | 1.2.0 |
+| Schema Version | 1.3.0 |
 
 ## Goal
 

@@ -66,6 +66,7 @@ cp -r task-portability ~/.workbuddy/skills/
 4. **关键决策必留理由** —— 决策 + 理由是任务里最易丢失、最有价值的资产。
 5. **隐性知识必写下来** —— "口口相传才会知道"的东西，写进交接备注。
 6. **工作区以仓库为准** —— 只记项目根目录与 `remote` + `branch` + 解析后的 commit 哈希；任何环境都能 clone 重建，而工作台的空间 / 项目 id 一出工具就失效。
+7. **字段名只有一套** —— `schema.json` 是闭合契约，写错或多写一个字段名直接校验失败；同义词对手写很自然，对下游任何读取方都是数据丢失。
 
 ---
 
@@ -129,3 +130,4 @@ Then use it ("snapshot this task" / "start a migratable task").
 4. **Decisions always carry their rationale** — decisions + reasons are the most easily lost, most valuable asset.
 5. **Tacit knowledge must be written down** — things "only known by word of mouth" go into the handoff notes.
 6. **Workspace anchored to the repo** — record the project root plus `remote` + `branch` + the resolved commit hash: any environment can rebuild that with a clone, while a workbench's space / project id dies with the tool.
+7. **One field name, no synonyms** — `schema.json` is a closed contract: an extra or misspelled key fails validation, because a synonym that feels natural to a human is silent data loss for every downstream reader.

@@ -26,6 +26,7 @@ This file defines key terms used in this skill, so cross-model successors share 
 | Freeze | Turning runtime state into static data. |
 | Resume / Take over | A new environment or model continues the task from the snapshot. |
 | Dual-format sync | Markdown and JSON describe the same state; change one and sync the other. |
+| Closed Contract | Every object in `schema.json` rejects keys it does not define. A synonym feels harmless but is invisible to every downstream reader, so the format treats an unknown field as an error rather than extra metadata. |
 
 ## Status Enum
 
