@@ -40,12 +40,12 @@
 ```
 <task-slug>/
 ├── task-snapshot.md    # 人类可读 → 任意 AI 或人读这一份即可接手
-├── task-snapshot.json  # 可编程 → 可校验、可转换、可追踪增量
-└── artifacts/          # （可选）关键工件清单
+└── task-snapshot.json  # 可编程 → 可校验、可转换、可追踪增量
 ```
 
 - **Markdown** 保证"任何模型都能读"（模型无关的根基）
 - **JSON** 保证"可校验、可转成其他格式"（平台无关、可迁移的根基）
+- **工件只记位置，不复制本体** —— 项目根目录、VCS 锚点（remote + branch + 已解析的 commit）、关键文件、依赖都记录在快照的 `artifacts` 小节里
 
 ## 安装 skill
 
@@ -66,6 +66,7 @@ cp -r task-portability ~/.workbuddy/skills/
 3. **绝对路径** —— 避免跨环境路径失效。
 4. **关键决策必留理由** —— 决策 + 理由是任务里最易丢失、最有价值的资产。
 5. **隐性知识必写下来** —— "口口相传才会知道"的东西，写进交接备注。
+6. **工作区以仓库为准** —— 只记项目根目录与 `remote` + `branch` + 解析后的 commit 哈希；任何环境都能 clone 重建，而工作台的空间 / 项目 id 一出工具就失效。
 
 ---
 
@@ -103,12 +104,12 @@ Each snapshot produces a **task snapshot bundle**:
 ```
 <task-slug>/
 ├── task-snapshot.md    # Human-readable → any AI or person can resume by reading this one file
-├── task-snapshot.json  # Programmable → validatable, convertible, and diffable for incremental tracking
-└── artifacts/          # (Optional) list of key artifacts
+└── task-snapshot.json  # Programmable → validatable, convertible, and diffable for incremental tracking
 ```
 
 - **Markdown** ensures "any model can read it" (the foundation of model-agnosticism)
 - **JSON** ensures "validatable and convertible to other formats" (the foundation of platform-agnosticism and portability)
+- **Artifacts record locations, not bodies** — project root, VCS anchor (remote + branch + resolved commit), key files, and dependencies all live in the snapshot's `artifacts` section
 
 ## Installing the Skill
 
@@ -129,3 +130,4 @@ Then use it ("snapshot this task" / "start a migratable task").
 3. **Absolute paths** — avoid path breakage across environments.
 4. **Decisions always carry their rationale** — decisions + reasons are the most easily lost, most valuable asset.
 5. **Tacit knowledge must be written down** — things "only known by word of mouth" go into the handoff notes.
+6. **Workspace anchored to the repo** — record the project root plus `remote` + `branch` + the resolved commit hash: any environment can rebuild that with a clone, while a workbench's space / project id dies with the tool.

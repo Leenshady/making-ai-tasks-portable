@@ -22,6 +22,8 @@ Checks with --strict (completeness, run only when the checks above pass):
        tree names what is uncommitted.
    10. identity.updated_at is not earlier than identity.created_at.
    11. Every JSON leaf string appears verbatim in the Markdown (deep sync).
+   12. No object key outside schema.json — a renamed optional field survives both
+       the type check and the sync check, yet is invisible to a JSON reader.
 
 Exit codes:
     0  valid
@@ -32,6 +34,7 @@ Standard library only.
 """
 
 import argparse
+import difflib
 import json
 import os
 import re
@@ -298,13 +301,47 @@ def check_workspace(artifacts, errors):
         )
 
 
-def check_strict(snapshot, errors):
+def check_unknown_keys(instance, schema, path, errors):
+    """Flag object keys that schema.json does not define (--strict only).
+
+    A renamed optional field is the quietest failure this format has: the value
+    is still there, so neither the type check nor the Markdown sync check
+    notices, yet the structured field is gone and a successor reading the JSON
+    cannot tell those strings were assumptions. Unknown keys are legal JSON
+    Schema, so this only bites in strict mode.
+    """
+    if not isinstance(schema, dict):
+        return
+    if isinstance(instance, dict) and isinstance(schema.get("properties"), dict):
+        known = schema["properties"]
+        for key in instance:
+            if key in known:
+                continue
+            close = difflib.get_close_matches(key, list(known), n=1, cutoff=0.6)
+            hint = " — did you mean %r?" % close[0] if close else ""
+            errors.append(
+                "strict: %s.%s is not a field defined in schema.json%s The value "
+                "survives the Markdown sync check but is invisible in the structured "
+                "snapshot, so the successor loses it." % (path, key, hint)
+            )
+        for key, value in instance.items():
+            if key in known:
+                check_unknown_keys(value, known[key], "%s.%s" % (path, key), errors)
+    elif isinstance(instance, list) and isinstance(schema.get("items"), dict):
+        for index, item in enumerate(instance):
+            check_unknown_keys(item, schema["items"], "%s[%d]" % (path, index), errors)
+
+
+def check_strict(snapshot, errors, schema=None):
     """Detect skeletons that are schema-valid but not finished (--strict only)."""
     identity = snapshot.get("identity") or {}
     goal = snapshot.get("goal") or {}
     progress = snapshot.get("progress") or {}
     artifacts = snapshot.get("artifacts") or {}
     resume = snapshot.get("resume") or {}
+
+    if schema is not None:
+        check_unknown_keys(snapshot, schema, "$", errors)
 
     for path, text in walk_strings(snapshot):
         if not text.strip():
@@ -415,7 +452,8 @@ def main():
         action="store_true",
         help="also fail on skeletons that are schema-valid but unfinished "
         "(empty strings, empty success criteria / next steps, placeholder text, "
-        "relative file paths, updated_at before created_at)",
+        "relative file paths, fields not defined in schema.json, updated_at "
+        "before created_at)",
     )
     args = parser.parse_args()
 
@@ -465,7 +503,7 @@ def main():
 
     if args.strict:
         strict_errors = []
-        check_strict(snapshot, strict_errors)
+        check_strict(snapshot, strict_errors, schema)
         if not args.skip_md:
             check_deep_sync(snapshot, md_path, strict_errors)
         if strict_errors:
@@ -480,7 +518,10 @@ def main():
     if not args.skip_md:
         print("    markdown: %s (consistent)" % md_path)
     if args.strict:
-        print("    strict: no empty fields, no placeholders, complete enough to hand off")
+        print(
+            "    strict: no empty fields, no placeholders, no undefined fields, "
+            "complete enough to hand off"
+        )
     return 0
 
 

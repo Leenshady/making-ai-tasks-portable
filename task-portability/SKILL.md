@@ -60,9 +60,10 @@ Each snapshot produces two complementary files in one directory:
 ```
 <task-slug>/
 ├── task-snapshot.md    # Human-readable: any AI or person can resume by reading this one file
-├── task-snapshot.json  # Programmable: validatable, convertible, diffable
-└── artifacts/          # (Optional) manifest of key artifacts
+└── task-snapshot.json  # Programmable: validatable, convertible, diffable
 ```
+
+Never copy artifact bodies into the bundle. The project root, VCS anchor (remote + branch + resolved commit), key files, dependencies, and deliberate exclusions all live in the snapshot's `artifacts` section as paths plus descriptions.
 
 ### Why two formats
 
@@ -198,7 +199,7 @@ Rules for using them:
 1. **Run `validate.py --strict` before declaring a snapshot done.** Exit code `0` = valid and complete, `1` = errors or incomplete (each printed with its JSON path), `2` = usage or I/O error. Do not report success while it exits non-zero.
 2. **Prefer `scaffold.py` over hand-writing a bundle.** It generates `task_id` and ISO 8601 timestamps correctly, and renders Markdown from the same data so the two files cannot drift.
 3. **`validate.py` checks what the hard rules require:** missing required fields, wrong types, invalid `status` enums, malformed `slug` patterns, non-ISO `date-time` values, and identity fields absent from the Markdown.
-4. **`--strict` rejects a schema-valid skeleton that is not finished.** It fails on empty strings, an empty `goal.success_criteria`, an empty `progress.next_steps` while `status` is `initialized` / `in-progress` / `checkpointed`, placeholder markers (`TODO`, `TBD`, `FIXME`, `XXX`, a whole-string `<...>`, an all-caps `<YOUR_NAME>`, `{{...}}`, `...`), a relative `artifacts.files[].path` or one with doubled separators, a `files` list with no `workspace.root`, a relative `workspace.root` or one with doubled separators, a `vcs.commit` that is a moving ref, a `dirty` tree with no `uncommitted` description, `updated_at` earlier than `created_at`, and any JSON string that is absent from `task-snapshot.md`. Use it when finalizing a snapshot; a mid-task checkpoint may legitimately run without it.
+4. **`--strict` rejects a schema-valid skeleton that is not finished.** It fails on empty strings, an empty `goal.success_criteria`, an empty `progress.next_steps` while `status` is `initialized` / `in-progress` / `checkpointed`, placeholder markers (`TODO`, `TBD`, `FIXME`, `XXX`, a whole-string `<...>`, an all-caps `<YOUR_NAME>`, `{{...}}`, `...`), a relative `artifacts.files[].path` or one with doubled separators, a `files` list with no `workspace.root`, a relative `workspace.root` or one with doubled separators, a `vcs.commit` that is a moving ref, a `dirty` tree with no `uncommitted` description, `updated_at` earlier than `created_at`, any JSON string that is absent from `task-snapshot.md`, and any object key that `schema.json` does not define (which catches a renamed or synonym field, the one mistake that survives both the type check and the sync check). Use it when finalizing a snapshot; a mid-task checkpoint may legitimately run without it.
 5. **If Python 3 is unavailable, skip the scripts — do not block the task.** Perform Step 4's self-check manually instead.
 6. **Keep the bundled example valid.** After changing `schema.json` or the example, run `python3 scripts/validate.py references/example-snapshot.json --md references/example-snapshot.md --strict`. The example is what successors copy, so a stale example silently teaches the wrong contract.
 

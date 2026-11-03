@@ -5,7 +5,7 @@ This file defines key terms used in this skill, so cross-model successors share 
 | Term | Definition |
 |---|---|
 | Task Snapshot | Self-contained data (Markdown + JSON) that freezes a task's state. |
-| Snapshot Bundle | The complete directory produced by one snapshot (md + json + artifacts). |
+| Snapshot Bundle | The directory produced by one snapshot (`task-snapshot.md` + `task-snapshot.json`). Artifact locations are recorded inside the snapshot, not copied into the bundle. |
 | Self-contained | A successor can resume by reading only the latest snapshot, without revisiting history. |
 | Context | Goals, constraints, background, and key decisions. |
 | Progress | Completed, findings, in-progress, next steps, blockers, and risks. |

@@ -82,7 +82,7 @@
 **Workspace**
 
 - Root: `{{workspace_root}}`
-- VCS: {{vcs_type}}, branch `{{vcs_branch}}`, commit `{{vcs_commit}}`, remote `{{vcs_remote}}`, repo `{{vcs_toplevel}}`
+- VCS: {{vcs_type}}, branch `{{vcs_branch}}`, commit `{{vcs_commit}}`, remote `{{vcs_remote}}`, repo `{{vcs_toplevel}}`, working tree {{vcs_dirty}}
 - Uncommitted: {{vcs_uncommitted}}
 - Excluded: `{{excluded_path_1}}` — {{excluded_reason_1}}
 

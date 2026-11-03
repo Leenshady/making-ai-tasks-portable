@@ -11,3 +11,7 @@ Thumbs.db
 
 # Generated task snapshots (runtime output, not source)
 .task-portability/
+
+# Python cache (helper scripts may be run in place)
+__pycache__/
+*.pyc

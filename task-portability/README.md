@@ -17,12 +17,12 @@ Each snapshot produces a **task snapshot bundle**:
 ```
 <task-slug>/
 ├── task-snapshot.md    # Human-readable → any AI or person can resume by reading this one file
-├── task-snapshot.json  # Programmable → validatable, convertible, and diffable
-└── artifacts/          # (Optional) list of key artifacts
+└── task-snapshot.json  # Programmable → validatable, convertible, and diffable
 ```
 
 - **Markdown** ensures "any model can read it" (the foundation of model-agnosticism)
 - **JSON** ensures "validatable and convertible to other formats" (the foundation of platform-agnosticism and portability)
+- **Artifacts record locations, not bodies** — project root, VCS anchor (remote + branch + resolved commit), key files, and dependencies all live in the snapshot's `artifacts` section
 
 ## When to Use
 
@@ -49,6 +49,7 @@ Each snapshot produces a **task snapshot bundle**:
 3. **Absolute paths** — avoid path breakage across environments.
 4. **Decisions always carry their rationale** — decisions + reasons are the most easily lost, most valuable asset.
 5. **Tacit knowledge must be written down** — things "only known by word of mouth" go into the handoff notes.
+6. **Workspace anchored to the repo** — record the project root plus `remote` + `branch` + the resolved commit hash: any environment can rebuild that with a clone, while a workbench's space / project id dies with the tool.
 
 ## File Structure
 
@@ -76,7 +77,7 @@ Python 3 standard library only — no `pip install`. The snapshot itself never d
 
 | Command | Purpose |
 |---|---|
-| `python3 scripts/validate.py <bundle-dir> [--strict]` | Validate JSON against `schema.json` + Markdown sync check; `--strict` also fails on unfinished skeletons (empty fields, placeholders, relative paths) |
+| `python3 scripts/validate.py <bundle-dir> [--strict]` | Validate JSON against `schema.json` + Markdown sync check; `--strict` also fails on unfinished skeletons (empty fields, placeholders, relative paths) and on field names that `schema.json` does not define |
 | `python3 scripts/validate.py references/example-snapshot.json --md references/example-snapshot.md --strict` | Self-check the bundled example; run it after touching `schema.json` or the example |
 | `python3 scripts/scaffold.py --title "T" --goal "G"` | Create a bundle skeleton with auto timestamps |
 | `python3 scripts/bundle.py <bundle-dir> -o out.zip` | Package a bundle for migration |

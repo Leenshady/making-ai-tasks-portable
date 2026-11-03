@@ -57,7 +57,7 @@ cp -r task-portability <你的项目>/.claude/skills/
 这是最彻底的解耦用法：
 
 1. 打开 `task-portability/SKILL.md`，复制正文（去掉 frontmatter）。
-2. 连同 `schema.json` 一起，作为**系统提示词 / 上下文**粘贴给任意模型（ChatGPT、通义、DeepSeek、Claude 等）。
+2. 连同 `schema.json` 与 `references/example-snapshot.md`（示例快照）一起，作为**系统提示词 / 上下文**粘贴给任意模型（ChatGPT、通义、DeepSeek、Claude 等）。
 3. 该模型即可照着规范产出或消费任务快照。
 
 因为快照本身是纯 Markdown + JSON、模型无关，所以任何模型都能无缝接手。
@@ -98,7 +98,7 @@ cp -r task-portability <project>/.claude/skills/
 
 - **Cursor**: create `.cursor/rules/task-portability.mdc` containing the `SKILL.md` body (without the `---` frontmatter).
 - **GitHub Copilot**: paste the `SKILL.md` body into Custom Instructions or `.github/copilot-instructions.md`.
-- **Any LLM**: paste the `SKILL.md` body + `schema.json` as the system prompt / context.
+- **Any LLM**: paste the `SKILL.md` body + `schema.json` + `references/example-snapshot.md` as the system prompt / context.
 
 ---
 
