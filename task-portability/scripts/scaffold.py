@@ -234,7 +234,6 @@ def build_snapshot(title, goal, slug, status, background, how_to_resume):
         },
         "resume": {
             "how_to_resume": how_to_resume,
-            "contact": "",
             "handoff_notes": [],
         },
     }

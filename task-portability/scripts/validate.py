@@ -2,7 +2,8 @@
 """Validate a task snapshot bundle against schema.json.
 
 Usage:
-    python3 validate.py <bundle-dir | task-snapshot.json> [--schema PATH] [--skip-md]
+    python3 validate.py <bundle-dir | task-snapshot.json> [--schema PATH]
+                        [--skip-md] [--strict]
 
 Checks:
     1. The snapshot JSON conforms to schema.json (required fields, types, enums,
@@ -10,9 +11,17 @@ Checks:
     2. A task-snapshot.md exists alongside the JSON.
     3. identity.task_id / title / status also appear in the Markdown (sync check).
 
+Checks with --strict (completeness, run only when the checks above pass):
+    4. No empty strings anywhere.
+    5. goal.success_criteria is not empty.
+    6. progress.next_steps is not empty while status is unfinished.
+    7. No placeholder markers (TODO, TBD, FIXME, XXX, <...>, {{...}}, "...").
+    8. artifacts.files[].path is absolute.
+    9. identity.updated_at is not earlier than identity.created_at.
+
 Exit codes:
     0  valid
-    1  validation errors found
+    1  validation errors found (or incomplete under --strict)
     2  usage or I/O error
 
 Standard library only.
@@ -54,15 +63,28 @@ def matches_type(value, expected):
     return actual == expected
 
 
+def parse_datetime(text):
+    """Return a datetime for text, or None if it is not ISO 8601."""
+    if not isinstance(text, str) or "T" not in text:
+        return None
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
 def is_datetime(text):
     """Return True if text is an ISO 8601 date-time."""
-    if "T" not in text:
-        return False
-    try:
-        datetime.fromisoformat(text.replace("Z", "+00:00"))
-    except ValueError:
-        return False
-    return True
+    return parse_datetime(text) is not None
+
+
+def is_absolute_path(text):
+    """Return True if text looks like an absolute path on this or any platform."""
+    return (
+        os.path.isabs(text)
+        or bool(re.match(r"^[A-Za-z]:[\\/]", text))
+        or text.startswith("\\\\")
+    )
 
 
 def validate(instance, schema, path="$", errors=None):
@@ -148,6 +170,99 @@ def check_sync(snapshot, md_path, errors):
             )
 
 
+def walk_strings(node, path="$"):
+    """Yield (json_path, string) for every string in the snapshot."""
+    if isinstance(node, str):
+        yield path, node
+    elif isinstance(node, dict):
+        for key, value in node.items():
+            for item in walk_strings(value, "%s.%s" % (path, key)):
+                yield item
+    elif isinstance(node, list):
+        for index, value in enumerate(node):
+            for item in walk_strings(value, "%s[%d]" % (path, index)):
+                yield item
+
+
+PLACEHOLDER_RE = re.compile(
+    "|".join(
+        [
+            r"\bTODO\b",
+            r"\bTBD\b",
+            r"\bFIXME\b",
+            r"\bXXX\b",
+            r"lorem ipsum",
+            r"<[^<>]{0,40}>",
+            r"\{\{[^}]{0,40}\}\}",
+            r"^\s*[.\-\u2026]{2,}\s*$",
+            r"待补",
+            r"待填",
+            r"占位",
+        ]
+    ),
+    re.IGNORECASE,
+)
+
+UNFINISHED_STATUSES = ("initialized", "in-progress", "checkpointed")
+
+
+def check_strict(snapshot, errors):
+    """Detect skeletons that are schema-valid but not finished (--strict only)."""
+    identity = snapshot.get("identity") or {}
+    goal = snapshot.get("goal") or {}
+    progress = snapshot.get("progress") or {}
+    artifacts = snapshot.get("artifacts") or {}
+    resume = snapshot.get("resume") or {}
+
+    for path, text in walk_strings(snapshot):
+        if not text.strip():
+            errors.append(
+                "strict: %s is an empty string — fill it in or omit the field" % path
+            )
+            continue
+        match = PLACEHOLDER_RE.search(text)
+        if match:
+            errors.append(
+                "strict: %s contains placeholder text %r" % (path, match.group(0))
+            )
+
+    if not goal.get("success_criteria"):
+        errors.append(
+            "strict: $.goal.success_criteria is empty — "
+            "a task without success criteria cannot be verified as done"
+        )
+
+    status = identity.get("status")
+    steps = progress.get("next_steps") or []
+    if status in UNFINISHED_STATUSES and not steps:
+        errors.append(
+            "strict: $.progress.next_steps is empty while status is %r — "
+            "a successor has nowhere to continue" % status
+        )
+
+    for index, entry in enumerate(artifacts.get("files") or []):
+        if not isinstance(entry, dict):
+            continue
+        path = entry.get("path")
+        if isinstance(path, str) and path.strip() and not is_absolute_path(path):
+            errors.append(
+                "strict: $.artifacts.files[%d].path %r is not absolute" % (index, path)
+            )
+
+    if not resume.get("how_to_resume", "").strip():
+        errors.append(
+            "strict: $.resume.how_to_resume is empty — the successor has no entry point"
+        )
+
+    created = parse_datetime(identity.get("created_at"))
+    updated = parse_datetime(identity.get("updated_at"))
+    if created and updated and updated < created:
+        errors.append(
+            "strict: $.identity.updated_at %r is earlier than created_at %r"
+            % (identity.get("updated_at"), identity.get("created_at"))
+        )
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Validate a task snapshot bundle against schema.json."
@@ -156,6 +271,13 @@ def main():
     parser.add_argument("--schema", default=DEFAULT_SCHEMA, help="path to schema.json")
     parser.add_argument(
         "--skip-md", action="store_true", help="skip Markdown presence and sync checks"
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="also fail on skeletons that are schema-valid but unfinished "
+        "(empty strings, empty success criteria / next steps, placeholder text, "
+        "relative file paths, updated_at before created_at)",
     )
     args = parser.parse_args()
 
@@ -185,10 +307,22 @@ def main():
             print("  - %s" % message)
         return 1
 
+    if args.strict:
+        strict_errors = []
+        check_strict(snapshot, strict_errors)
+        if strict_errors:
+            print("INCOMPLETE  %s" % json_path)
+            print("    schema-valid, but not finished:")
+            for message in strict_errors:
+                print("  - %s" % message)
+            return 1
+
     print("OK  %s" % json_path)
     print("    schema: %s" % args.schema)
     if not args.skip_md:
         print("    markdown: %s (consistent)" % md_path)
+    if args.strict:
+        print("    strict: no empty fields, no placeholders, complete enough to hand off")
     return 0
 
 

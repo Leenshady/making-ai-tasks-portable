@@ -152,17 +152,18 @@ Verify each:
 
 | Script | Command | Purpose |
 |---|---|---|
-| `validate.py` | `python3 scripts/validate.py <bundle-dir>` | Validate JSON against `schema.json` and check Markdown sync |
+| `validate.py` | `python3 scripts/validate.py <bundle-dir> [--strict]` | Validate JSON against `schema.json`, check Markdown sync; `--strict` also rejects unfinished skeletons |
 | `scaffold.py` | `python3 scripts/scaffold.py --title "T" --goal "G"` | Create a bundle skeleton with auto timestamps and `task_id` |
 | `bundle.py` | `python3 scripts/bundle.py <bundle-dir> [-o out.zip]` | Package a bundle for migration (top-level dir preserved) |
 | `resume.py` | `python3 scripts/resume.py <bundle-dir>` | Print a compact resume briefing for a successor |
 
 Rules for using them:
 
-1. **Run `validate.py` before declaring a snapshot done.** Exit code `0` = valid, `1` = errors (each printed with its JSON path), `2` = usage or I/O error. Do not report success while it exits non-zero.
+1. **Run `validate.py --strict` before declaring a snapshot done.** Exit code `0` = valid and complete, `1` = errors or incomplete (each printed with its JSON path), `2` = usage or I/O error. Do not report success while it exits non-zero.
 2. **Prefer `scaffold.py` over hand-writing a bundle.** It generates `task_id` and ISO 8601 timestamps correctly, and renders Markdown from the same data so the two files cannot drift.
 3. **`validate.py` checks what the hard rules require:** missing required fields, wrong types, invalid `status` enums, malformed `slug` patterns, non-ISO `date-time` values, and identity fields absent from the Markdown.
-4. **If Python 3 is unavailable, skip the scripts — do not block the task.** Perform Step 4's self-check manually instead.
+4. **`--strict` rejects a schema-valid skeleton that is not finished.** It fails on empty strings, an empty `goal.success_criteria`, an empty `progress.next_steps` while `status` is `initialized` / `in-progress` / `checkpointed`, placeholder markers (`TODO`, `TBD`, `FIXME`, `XXX`, `<...>`, `{{...}}`, `...`), a relative `artifacts.files[].path`, and `updated_at` earlier than `created_at`. Use it when finalizing a snapshot; a mid-task checkpoint may legitimately run without it.
+5. **If Python 3 is unavailable, skip the scripts — do not block the task.** Perform Step 4's self-check manually instead.
 
 ## Migration & Resume (successor's view)
 
