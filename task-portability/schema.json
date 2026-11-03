@@ -214,8 +214,8 @@
           "properties": {
             "root": {
               "type": "string",
-              "description": "Absolute path of the project root the task operates in. Anchors every artifacts.files[].path, so a successor can tell which prefix is the project instead of guessing from a file path.",
-              "examples": ["F:\\dev\\ndm-extension"]
+              "description": "Absolute path of the project root the task operates in, in the platform's native form (POSIX or Windows drive letter). Anchors every artifacts.files[].path, so a successor can tell which prefix is the project instead of guessing from a file path. Examples here are deliberately platform-neutral, not any real machine's layout.",
+              "examples": ["/workspace/ndm-extension"]
             },
             "vcs": {
               "type": "object",
@@ -239,8 +239,8 @@
                 },
                 "toplevel": {
                   "type": "string",
-                  "description": "Absolute path of the repository top level — what a clone actually produces. Differs from workspace.root whenever the task works inside a subdirectory (a monorepo package, for example); without it a successor clones the repo and cannot tell which subdirectory the task lives in.",
-                  "examples": ["F:\\dev\\ndm-extension"]
+                  "description": "Absolute path of the repository top level — what a clone actually produces — in the platform's native form. Differs from workspace.root whenever the task works inside a subdirectory (a monorepo package, for example); without it a successor clones the repo and cannot tell which subdirectory the task lives in.",
+                  "examples": ["/workspace/ndm-extension"]
                 },
                 "commit": {
                   "type": "string",
@@ -289,8 +289,8 @@
             "properties": {
               "path": {
                 "type": "string",
-                "description": "Absolute path.",
-                "examples": ["F:\\dev\\ndm-extension\\ct.js"]
+                "description": "Absolute path, in the platform's native form (POSIX or Windows drive letter).",
+                "examples": ["/workspace/ndm-extension/ct.js"]
               },
               "description": {
                 "type": "string",
@@ -323,7 +323,7 @@
           "items": { "type": "string" },
           "description": "Runtime requirements (OS, runtime, versions).",
           "examples": [
-            ["Windows 11", "Chrome latest stable (MV3 support)"]
+            ["Any modern OS", "Chrome latest stable (MV3 support)"]
           ]
         },
         "commands": {
@@ -343,7 +343,7 @@
         "how_to_resume": {
           "type": "string",
           "description": "The FIRST thing a successor should do, and where to continue from.",
-          "examples": ["Open F:\\dev\\ndm-extension\\ct.js, find the interception entry function, and continue from the first next_step."]
+          "examples": ["Open /workspace/ndm-extension/ct.js, find the interception entry function, and continue from the first next_step."]
         },
         "contact": {
           "type": "string",

@@ -91,17 +91,17 @@ The NDM extension uses MV3. `ct.js` (content script) intercepts download links; 
 
 **Workspace**
 
-- Root: `F:\dev\ndm-extension`
-- VCS: git, branch `main`, commit `a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0`, remote `https://github.com/example/ndm-extension.git`, repo `F:\dev\ndm-extension`, working tree DIRTY at snapshot time
+- Root: `/workspace/ndm-extension`
+- VCS: git, branch `main`, commit `a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0`, remote `https://github.com/example/ndm-extension.git`, repo `/workspace/ndm-extension`, working tree DIRTY at snapshot time
 - Uncommitted: M ct.js (temporary tracing logs added while analysing)
 - Excluded: `dist/` — build output; regenerate with npm run build
 - Excluded: `node_modules/` — reinstall with npm ci
 
 **Files**
 
-- `F:\dev\ndm-extension\ct.js` — content script that intercepts download links; add filtering logic here.
-- `F:\dev\ndm-extension\bg.js` — service worker; not changed in this task.
-- `F:\dev\ndm-extension\manifest.json` — extension manifest; sync if new permissions are added.
+- `/workspace/ndm-extension/ct.js` — content script that intercepts download links; add filtering logic here.
+- `/workspace/ndm-extension/bg.js` — service worker; not changed in this task.
+- `/workspace/ndm-extension/manifest.json` — extension manifest; sync if new permissions are added.
 
 **Dependencies**
 
@@ -109,7 +109,7 @@ The NDM extension uses MV3. `ct.js` (content script) intercepts download links; 
 
 **Environment**
 
-- Windows 11
+- Any modern OS
 - Chrome latest stable (MV3 support)
 
 **Commands**
@@ -122,7 +122,7 @@ The NDM extension uses MV3. `ct.js` (content script) intercepts download links; 
 
 **How to Resume**
 
-Open `F:\dev\ndm-extension\ct.js` and find the interception entry function (roughly in the second half of the file), then continue from the first `next_steps` item.
+Open `/workspace/ndm-extension/ct.js` and find the interception entry function (roughly in the second half of the file), then continue from the first `next_steps` item.
 
 1. Confirm the entry function's location and line numbers.
 2. Run the existing interception once before changes to confirm baseline behavior.

@@ -78,13 +78,13 @@
   },
   "artifacts": {
     "workspace": {
-      "root": "F:\\dev\\ndm-extension",
+      "root": "/workspace/ndm-extension",
       "vcs": {
         "type": "git",
         "remote": "https://github.com/example/ndm-extension.git",
         "branch": "main",
         "commit": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
-        "toplevel": "F:\\dev\\ndm-extension",
+        "toplevel": "/workspace/ndm-extension",
         "dirty": true,
         "uncommitted": "M ct.js (temporary tracing logs added while analysing)"
       },
@@ -101,15 +101,15 @@
     },
     "files": [
       {
-        "path": "F:\\dev\\ndm-extension\\ct.js",
+        "path": "/workspace/ndm-extension/ct.js",
         "description": "content script that intercepts download links; add filtering logic here."
       },
       {
-        "path": "F:\\dev\\ndm-extension\\bg.js",
+        "path": "/workspace/ndm-extension/bg.js",
         "description": "service worker; not changed in this task."
       },
       {
-        "path": "F:\\dev\\ndm-extension\\manifest.json",
+        "path": "/workspace/ndm-extension/manifest.json",
         "description": "extension manifest; sync if new permissions are added."
       }
     ],
@@ -119,13 +119,13 @@
         "how_to_obtain": "Install the latest stable Chrome and load the NDM extension for manual testing."
       }
     ],
-    "environment": ["Windows 11", "Chrome latest stable (MV3 support)"],
+    "environment": ["Any modern OS", "Chrome latest stable (MV3 support)"],
     "commands": [
       "Reload the extension in chrome://extensions to apply changes."
     ]
   },
   "resume": {
-    "how_to_resume": "Open `F:\\dev\\ndm-extension\\ct.js` and find the interception entry function (roughly in the second half of the file), then continue from the first `next_steps` item.",
+    "how_to_resume": "Open `/workspace/ndm-extension/ct.js` and find the interception entry function (roughly in the second half of the file), then continue from the first `next_steps` item.",
     "contact": "Task owner (reachable via the original conversation / workbench).",
     "handoff_notes": [
       "The user prefers detailed technical explanations: architecture diagrams, line-by-line code breakdown, file paths with line numbers, and comparison tables.",

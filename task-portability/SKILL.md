@@ -108,7 +108,7 @@ A valid snapshot MUST cover the following fields. **Field names MUST match `sche
 
 ### 5. artifacts & dependencies
 - `workspace`: where the task physically lives. Platform-neutral by design — **record the task's project root and VCS anchor, never a workbench-specific "space" or "project" id**.
-  - `root`: absolute path of the project root. This anchors every `files[].path`; without it a successor sees `F:\dev\app\src\x.js` and has to guess where `F:\dev\app` ends and the task begins.
+  - `root`: absolute path of the project root, in the platform's native form (POSIX or Windows drive letter). This anchors every `files[].path`; without it a successor sees `/workspace/app/src/x.js` and has to guess where `/workspace/app` ends and the task begins.
   - `vcs`: `type` + `remote` + `branch` + `commit` + `toplevel`. `remote` + `branch` + `commit` is the single most portable description of a code workspace, because any environment can rebuild it with a clone. Record the **resolved commit hash**, never a moving ref (`HEAD`, `main`, `latest`) — those point at different content later.
   - `vcs.toplevel`: the repository top level, i.e. what a clone produces. It differs from `root` when the task works inside a subdirectory (a monorepo package, for example); without it a successor clones the repo but cannot tell where to `cd`.
   - `vcs.dirty` + `vcs.uncommitted`: whether the tree was dirty, and what exactly was uncommitted. When `dirty` is `true`, the commit alone does **not** reproduce the code state, and **a fresh clone will never contain that work** — so `uncommitted` is mandatory. If you cannot describe it in one line, commit or stash first, then snapshot.

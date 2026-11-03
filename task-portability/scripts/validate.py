@@ -83,9 +83,16 @@ def is_datetime(text):
 
 
 def is_absolute_path(text):
-    """Return True if text looks like an absolute path on this or any platform."""
+    """Return True if text looks like an absolute path on this or any platform.
+
+    A snapshot written on Linux may be validated on Windows and vice versa, so
+    both forms are accepted regardless of the host OS. The explicit leading
+    "/" check matters: since Python 3.13 ntpath.isabs("/workspace/x") is False
+    on Windows, which would reject perfectly valid POSIX snapshots.
+    """
     return (
         os.path.isabs(text)
+        or text.startswith("/")
         or bool(re.match(r"^[A-Za-z]:[\\/]", text))
         or text.startswith("\\\\")
     )
@@ -93,7 +100,7 @@ def is_absolute_path(text):
 
 def has_repeated_separators(text):
     """Return True if a path contains doubled separators (an escaping mistake)."""
-    body = text[2:] if text.startswith("\\\\") else text
+    body = text[2:] if text.startswith(("\\\\", "//")) else text
     body = re.sub(r"^[A-Za-z]:", "", body)
     return bool(re.search(r"[/\\]{2,}", body))
 
