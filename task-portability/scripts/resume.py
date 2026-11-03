@@ -42,6 +42,7 @@ def main():
     goal = data.get("goal") or {}
     context = data.get("context") or {}
     progress = data.get("progress") or {}
+    artifacts = data.get("artifacts") or {}
     resume = data.get("resume") or {}
 
     rule = "=" * 62
@@ -51,6 +52,33 @@ def main():
     print("Task    : %s" % (identity.get("task_id") or "-"))
     print("Status  : %s" % (identity.get("status") or "-"))
     print("Updated : %s" % (identity.get("updated_at") or "-"))
+
+    workspace = artifacts.get("workspace") or {}
+    if workspace:
+        print("\nWORKSPACE")
+        if workspace.get("root"):
+            print("  root    : %s" % workspace["root"])
+        vcs = workspace.get("vcs") or {}
+        if vcs:
+            bits = [vcs.get("type") or "?"]
+            if vcs.get("branch"):
+                bits.append("branch %s" % vcs["branch"])
+            if vcs.get("commit"):
+                bits.append("commit %s" % vcs["commit"])
+            print("  vcs     : %s" % ", ".join(bits))
+            if vcs.get("remote"):
+                print("  remote  : %s" % vcs["remote"])
+            if vcs.get("toplevel") and vcs["toplevel"] != workspace.get("root"):
+                print("  repo    : %s  (clone target; the task lives in a subdirectory)" % vcs["toplevel"])
+            if vcs.get("dirty"):
+                print("  WARNING : the working tree had uncommitted changes at snapshot time")
+                if vcs.get("uncommitted"):
+                    print("  uncommitted : %s" % vcs["uncommitted"])
+                    print("            -> not in any commit; a fresh clone will NOT contain it")
+                else:
+                    print("            -> run `git status` before trusting this checkout")
+        for item in workspace.get("excluded") or []:
+            print("  omitted : %s (%s)" % (item.get("path", ""), item.get("reason", "")))
 
     print("\nGOAL")
     print("  %s" % (goal.get("goal") or "-"))

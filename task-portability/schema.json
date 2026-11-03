@@ -17,8 +17,8 @@
     "schema_version": {
       "type": "string",
       "description": "Version of this snapshot schema.",
-      "const": "1.1.0",
-      "examples": ["1.1.0"]
+      "const": "1.2.0",
+      "examples": ["1.2.0"]
     },
     "identity": {
       "type": "object",
@@ -208,6 +208,79 @@
     "artifacts": {
       "type": "object",
       "properties": {
+        "workspace": {
+          "type": "object",
+          "description": "Where the task physically lives: the project root, the version-control anchor, and anything deliberately left out. Platform-neutral on purpose — a commit hash is rebuildable in any environment, while a workbench-specific space id is not.",
+          "properties": {
+            "root": {
+              "type": "string",
+              "description": "Absolute path of the project root the task operates in. Anchors every artifacts.files[].path, so a successor can tell which prefix is the project instead of guessing from a file path.",
+              "examples": ["F:\\dev\\ndm-extension"]
+            },
+            "vcs": {
+              "type": "object",
+              "required": ["type"],
+              "description": "Version-control anchor. repo + branch + commit is the most portable description of a workspace, because any environment can rebuild it from those three values alone.",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Version-control system (git / hg / svn / other).",
+                  "examples": ["git"]
+                },
+                "remote": {
+                  "type": "string",
+                  "description": "Clone URL, so the checkout can be rebuilt elsewhere.",
+                  "examples": ["https://github.com/example/ndm-extension.git"]
+                },
+                "branch": {
+                  "type": "string",
+                  "description": "Branch the task is working on.",
+                  "examples": ["main"]
+                },
+                "toplevel": {
+                  "type": "string",
+                  "description": "Absolute path of the repository top level — what a clone actually produces. Differs from workspace.root whenever the task works inside a subdirectory (a monorepo package, for example); without it a successor clones the repo and cannot tell which subdirectory the task lives in.",
+                  "examples": ["F:\\dev\\ndm-extension"]
+                },
+                "commit": {
+                  "type": "string",
+                  "description": "Resolved commit hash or revision. Never a moving ref such as HEAD or a branch name — those point at different content later and are not reconstructible.",
+                  "examples": ["a1b2c3d4e5f6"]
+                },
+                "dirty": {
+                  "type": "boolean",
+                  "description": "True when the working tree had uncommitted changes at snapshot time. When true, the commit alone does not reproduce the code state, so `uncommitted` must record what those changes are.",
+                  "examples": [true]
+                },
+                "uncommitted": {
+                  "type": "string",
+                  "description": "What was uncommitted when the snapshot was taken. Required when `dirty` is true, because a fresh clone will never contain these changes — without this line the work is simply lost to the successor.",
+                  "examples": ["M ct.js (filter half-written), ?? nightly/"]
+                }
+              }
+            },
+            "excluded": {
+              "type": "array",
+              "description": "Paths deliberately left out of the snapshot. Without this, a successor reads a short files list as 'the task is small' rather than 'I must rebuild these'.",
+              "items": {
+                "type": "object",
+                "required": ["path", "reason"],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Path that was left out, relative to root unless absolute.",
+                    "examples": ["nightly/"]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "Why it was left out and how to regenerate it. Records the omission as deliberate, not an oversight.",
+                    "examples": ["build output; regenerate with npm run build"]
+                  }
+                }
+              }
+            }
+          }
+        },
         "files": {
           "type": "array",
           "items": {

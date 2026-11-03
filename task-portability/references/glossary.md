@@ -9,7 +9,12 @@ This file defines key terms used in this skill, so cross-model successors share 
 | Self-contained | A successor can resume by reading only the latest snapshot, without revisiting history. |
 | Context | Goals, constraints, background, and key decisions. |
 | Progress | Completed, findings, in-progress, next steps, blockers, and risks. |
-| Artifacts | Files involved/produced, dependencies, and environment. |
+| Artifacts | The workspace, files involved/produced, dependencies, environment, and commands. |
+| Workspace | Where the task physically lives: the project root, the VCS anchor, and anything deliberately left out. |
+| Workspace Root | Absolute path of the project the task operates in; anchors every `files[].path` so a successor never has to guess which prefix is the project. |
+| VCS Anchor | `remote` + `branch` + `commit` — the most portable description of a code workspace, because any environment can rebuild it from those values alone. |
+| Moving Ref | A ref such as `HEAD` or a branch name. It looks like a commit but resolves to different content later, so it cannot reconstruct the code the task ran on. |
+| Excluded | Paths deliberately left out of the snapshot, each with a reason and how to regenerate. Marks the omission as intentional, so a short file list is not misread as "the task is small". |
 | Findings | What the work has revealed so far, stated as an outcome (a diff result, a failure, a surprise) — never as an activity. |
 | Key Decisions | Decisions already made, each with its reason (the most easily lost asset). |
 | Tacit Knowledge | Things "only known by word of mouth", which must go into the handoff notes. |

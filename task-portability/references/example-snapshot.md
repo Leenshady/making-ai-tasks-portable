@@ -12,7 +12,7 @@
 | Status | in-progress |
 | Created At | 2026-11-02T14:00:00+08:00 |
 | Updated At | 2026-11-02T15:30:00+08:00 |
-| Schema Version | 1.1.0 |
+| Schema Version | 1.2.0 |
 
 ## Goal
 
@@ -88,6 +88,14 @@ The NDM extension uses MV3. `ct.js` (content script) intercepts download links; 
 - A filter-rule cache key-name collision with existing session data — avoid by using a dedicated namespace.
 
 ## Artifacts
+
+**Workspace**
+
+- Root: `F:\dev\ndm-extension`
+- VCS: git, branch `main`, commit `a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0`, remote `https://github.com/example/ndm-extension.git`, repo `F:\dev\ndm-extension`, working tree DIRTY at snapshot time
+- Uncommitted: M ct.js (temporary tracing logs added while analysing)
+- Excluded: `dist/` — build output; regenerate with npm run build
+- Excluded: `node_modules/` — reinstall with npm ci
 
 **Files**
 

@@ -79,6 +79,13 @@
 
 ## Artifacts
 
+**Workspace**
+
+- Root: `{{workspace_root}}`
+- VCS: {{vcs_type}}, branch `{{vcs_branch}}`, commit `{{vcs_commit}}`, remote `{{vcs_remote}}`, repo `{{vcs_toplevel}}`
+- Uncommitted: {{vcs_uncommitted}}
+- Excluded: `{{excluded_path_1}}` — {{excluded_reason_1}}
+
 **Files**
 
 - `{{file_path_1}}` — {{file_desc_1}}

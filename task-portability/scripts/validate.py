@@ -17,8 +17,11 @@ Checks with --strict (completeness, run only when the checks above pass):
     6. progress.next_steps is not empty while status is unfinished.
     7. No placeholder markers (TODO, TBD, FIXME, XXX, <...>, {{...}}, "...").
     8. artifacts.files[].path is absolute and has no doubled separators.
-    9. identity.updated_at is not earlier than identity.created_at.
-   10. Every JSON leaf string appears verbatim in the Markdown (deep sync).
+    9. artifacts.workspace.root is absolute and present whenever files or a VCS
+       anchor exist; vcs.commit is a resolved revision, not a moving ref; a dirty
+       tree names what is uncommitted.
+   10. identity.updated_at is not earlier than identity.created_at.
+   11. Every JSON leaf string appears verbatim in the Markdown (deep sync).
 
 Exit codes:
     0  valid
@@ -226,6 +229,67 @@ def find_placeholder(text):
 
 UNFINISHED_STATUSES = ("initialized", "in-progress", "checkpointed")
 
+# Values people type into vcs.commit that are not commits. A moving ref looks
+# like an anchor but points at different content later, so a successor who
+# clones and checks it out gets code that is not the code the task ran on.
+MOVING_REFS = ("head", "main", "master", "latest", "dev", "develop", "trunk")
+
+
+def check_workspace(artifacts, errors):
+    """Reject a workspace record that cannot be used to rebuild the checkout."""
+    workspace = artifacts.get("workspace") or {}
+    files = [entry for entry in (artifacts.get("files") or []) if isinstance(entry, dict)]
+    raw_root = workspace.get("root")
+    root = raw_root.strip() if isinstance(raw_root, str) else ""
+    vcs = workspace.get("vcs") or {}
+
+    if not root:
+        if files:
+            errors.append(
+                "strict: $.artifacts.workspace.root is missing while $.artifacts.files "
+                "lists %d path(s) — without the root a successor cannot tell which "
+                "prefix is the project" % len(files)
+            )
+        if vcs:
+            errors.append(
+                "strict: $.artifacts.workspace.vcs is recorded but root is missing — "
+                "a checkout exists at a location, so record it"
+            )
+
+    for label, value in (
+        ("$.artifacts.workspace.root", root),
+        ("$.artifacts.workspace.vcs.toplevel", vcs.get("toplevel")),
+    ):
+        if not isinstance(value, str) or not value.strip():
+            continue
+        if not is_absolute_path(value):
+            errors.append(
+                "strict: %s %r is not absolute — a successor cannot locate the "
+                "project from a relative path" % (label, value.strip())
+            )
+        elif has_repeated_separators(value.strip()):
+            errors.append(
+                "strict: %s %r has repeated separators — fix the escaping"
+                % (label, value.strip())
+            )
+
+    commit = vcs.get("commit")
+    if isinstance(commit, str) and commit.strip().lower() in MOVING_REFS:
+        errors.append(
+            "strict: $.artifacts.workspace.vcs.commit %r is a moving ref, not a "
+            "resolved revision — record the hash (git rev-parse HEAD)" % commit
+        )
+
+    uncommitted = vcs.get("uncommitted")
+    if vcs.get("dirty") is True and not (
+        isinstance(uncommitted, str) and uncommitted.strip()
+    ):
+        errors.append(
+            "strict: $.artifacts.workspace.vcs.dirty is true but uncommitted is empty "
+            "— a fresh clone will not contain that work, so the successor loses it; "
+            "commit or stash it, or record what is uncommitted"
+        )
+
 
 def check_strict(snapshot, errors):
     """Detect skeletons that are schema-valid but not finished (--strict only)."""
@@ -276,6 +340,8 @@ def check_strict(snapshot, errors):
                     "strict: $.artifacts.files[%d].path %r has repeated separators "
                     "— a successor cannot open it; fix the escaping" % (index, path)
                 )
+
+    check_workspace(artifacts, errors)
 
     if not resume.get("how_to_resume", "").strip():
         errors.append(
