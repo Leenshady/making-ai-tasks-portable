@@ -60,11 +60,9 @@ task-portability/
 ├── schema.json            # Validation schema for the snapshot JSON
 ├── scripts/               # Optional helpers (Python 3 stdlib only)
 │   ├── validate.py        #   Validate a bundle against schema.json
-│   ├── scaffold.py        #   Create a bundle skeleton
+│   ├── scaffold.py        #   Create a bundle skeleton (also renders its Markdown)
 │   ├── bundle.py          #   Package a bundle into a zip
 │   └── resume.py          #   Print a resume briefing
-├── templates/
-│   └── task-snapshot.md.tpl  # Markdown snapshot template
 └── references/
     ├── example-snapshot.md   # Example snapshot (what the output looks like)
     ├── example-snapshot.json # Its structured counterpart, kept in sync

@@ -29,8 +29,7 @@
 | `task-portability/` | AI Skill：任务可移植性的完整实现 |
 | └ `SKILL.md` | skill 主体（方法论 + 工作流 + 硬性规则） |
 | └ `schema.json` | 快照 JSON 的校验 Schema |
-| └ `scripts/` | 辅助脚本（纯 Python 3 标准库，可选） |
-| └ `templates/` | Markdown 快照模板 |
+| └ `scripts/` | 辅助脚本（纯 Python 3 标准库，可选；`scaffold.py` 同时渲染 Markdown） |
 | └ `references/` | 示例快照与术语表 |
 
 ## 快照产出
@@ -93,8 +92,7 @@ Once these three are frozen into **model-agnostic, platform-agnostic, self-conta
 | `task-portability/` | The AI Skill: complete implementation of task portability |
 | └ `SKILL.md` | Skill body (methodology + workflow + hard rules) |
 | └ `schema.json` | Validation schema for the snapshot JSON |
-| └ `scripts/` | Helper scripts (Python 3 stdlib only, optional) |
-| └ `templates/` | Markdown snapshot template |
+| └ `scripts/` | Helper scripts (Python 3 stdlib only, optional; `scaffold.py` renders the Markdown too) |
 | └ `references/` | Example snapshot and glossary |
 
 ## Snapshot Output

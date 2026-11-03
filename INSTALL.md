@@ -6,7 +6,7 @@
 
 > [English ↓](#english)
 
-`task-portability` 是一个**跨平台可移植**的 AI Skill。它的核心资产是 `SKILL.md` 里的方法论 + `schema.json` 校验规范 + 模板，**不依赖任何单一工作台或模型**。你可以按下面的方式，把它接入你正在使用的任意 AI 工具。
+`task-portability` 是一个**跨平台可移植**的 AI Skill。它的核心资产是 `SKILL.md` 里的方法论 + `schema.json` 校验规范 + 示例快照，**不依赖任何单一工作台或模型**。你可以按下面的方式，把它接入你正在使用的任意 AI 工具。
 
 > 说明：`task-portability/` 目录里的文件是**规范内容本身**，与具体平台解耦。不同工具对「skill」的支持程度不同，因此分为「原生安装」和「降级为规则/提示词」两种方式。
 
@@ -73,7 +73,7 @@ cp -r task-portability <你的项目>/.claude/skills/
 
 > [中文 ↑](#中文说明chinese)
 
-`task-portability` is a **cross-platform, portable AI Skill**. Its core assets are the methodology in `SKILL.md` + the `schema.json` validation spec + templates, with **no dependency on any single workbench or model**.
+`task-portability` is a **cross-platform, portable AI Skill**. Its core assets are the methodology in `SKILL.md` + the `schema.json` validation spec + the worked example snapshot, with **no dependency on any single workbench or model**.
 
 > This document has two layers: **For AI Agents** (machine-consumable, precise commands) and **For Humans** (bilingual explanation). Prefer the first layer when you are an AI performing the install.
 
