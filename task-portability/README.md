@@ -66,6 +66,7 @@ task-portability/
 │   └── task-snapshot.md.tpl  # Markdown snapshot template
 └── references/
     ├── example-snapshot.md   # Example snapshot (what the output looks like)
+    ├── example-snapshot.json # Its structured counterpart, kept in sync
     └── glossary.md           # Term glossary (cross-model semantics)
 ```
 
@@ -76,6 +77,7 @@ Python 3 standard library only — no `pip install`. The snapshot itself never d
 | Command | Purpose |
 |---|---|
 | `python3 scripts/validate.py <bundle-dir> [--strict]` | Validate JSON against `schema.json` + Markdown sync check; `--strict` also fails on unfinished skeletons (empty fields, placeholders, relative paths) |
+| `python3 scripts/validate.py references/example-snapshot.json --md references/example-snapshot.md --strict` | Self-check the bundled example; run it after touching `schema.json` or the example |
 | `python3 scripts/scaffold.py --title "T" --goal "G"` | Create a bundle skeleton with auto timestamps |
 | `python3 scripts/bundle.py <bundle-dir> -o out.zip` | Package a bundle for migration |
 | `python3 scripts/resume.py <bundle-dir>` | Print a compact resume briefing |

@@ -7,6 +7,7 @@
 | Field | Value |
 |---|---|
 | Task ID | `task-20261102-1530` |
+| Slug | `ndm-download-filter` |
 | Title | Adjust download interception strategy for the NDM extension |
 | Status | in-progress |
 | Created At | 2026-11-02T14:00:00+08:00 |
@@ -91,7 +92,7 @@ The NDM extension uses MV3. `ct.js` (content script) intercepts download links; 
 
 **Dependencies**
 
-- Chrome (with the NDM extension) — install the latest stable Chrome and load the NDM extension for manual testing.
+- Chrome (with the NDM extension) — Install the latest stable Chrome and load the NDM extension for manual testing.
 
 **Environment**
 
@@ -108,9 +109,11 @@ The NDM extension uses MV3. `ct.js` (content script) intercepts download links; 
 
 **How to Resume**
 
-1. Open `F:\dev\ndm-extension\ct.js` and find the interception entry function (roughly in the second half of the file).
-2. Continue from the first `next_steps` item: confirm the entry function's location and line numbers.
-3. Run the existing interception once before changes to confirm baseline behavior.
+Open `F:\dev\ndm-extension\ct.js` and find the interception entry function (roughly in the second half of the file), then continue from the first `next_steps` item.
+
+1. Confirm the entry function's location and line numbers.
+2. Run the existing interception once before changes to confirm baseline behavior.
+3. Design the insertion point for file-type filtering.
 
 **Contact**
 

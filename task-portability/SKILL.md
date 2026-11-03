@@ -41,7 +41,7 @@ Once these three are frozen into self-contained data, the task is no longer host
 
 ## Output: Task Snapshot Bundle
 
-> Before generating a snapshot, read `@references/example-snapshot.md` for a complete example of a valid snapshot. For term definitions, read `@references/glossary.md`. Field names MUST match `schema.json` exactly.
+> Before generating a snapshot, read `@references/example-snapshot.md` for a complete example of a valid snapshot, with `@references/example-snapshot.json` as its structured counterpart. For term definitions, read `@references/glossary.md`. Field names MUST match `schema.json` exactly. Both example files are validated by `scripts/validate.py`, so they never drift from this contract.
 
 Each snapshot produces two complementary files in one directory:
 
@@ -164,6 +164,7 @@ Rules for using them:
 3. **`validate.py` checks what the hard rules require:** missing required fields, wrong types, invalid `status` enums, malformed `slug` patterns, non-ISO `date-time` values, and identity fields absent from the Markdown.
 4. **`--strict` rejects a schema-valid skeleton that is not finished.** It fails on empty strings, an empty `goal.success_criteria`, an empty `progress.next_steps` while `status` is `initialized` / `in-progress` / `checkpointed`, placeholder markers (`TODO`, `TBD`, `FIXME`, `XXX`, a whole-string `<...>`, an all-caps `<YOUR_NAME>`, `{{...}}`, `...`), a relative `artifacts.files[].path` or one with doubled separators, `updated_at` earlier than `created_at`, and any JSON string that is absent from `task-snapshot.md`. Use it when finalizing a snapshot; a mid-task checkpoint may legitimately run without it.
 5. **If Python 3 is unavailable, skip the scripts — do not block the task.** Perform Step 4's self-check manually instead.
+6. **Keep the bundled example valid.** After changing `schema.json` or the example, run `python3 scripts/validate.py references/example-snapshot.json --md references/example-snapshot.md --strict`. The example is what successors copy, so a stale example silently teaches the wrong contract.
 
 ## Migration & Resume (successor's view)
 

@@ -3,7 +3,7 @@
 
 Usage:
     python3 validate.py <bundle-dir | task-snapshot.json> [--schema PATH]
-                        [--skip-md] [--strict]
+                        [--md PATH] [--skip-md] [--strict]
 
 Checks:
     1. The snapshot JSON conforms to schema.json (required fields, types, enums,
@@ -161,13 +161,15 @@ def resolve_paths(target):
 def check_sync(snapshot, md_path, errors):
     """Verify key identity values also appear in the Markdown."""
     if not os.path.isfile(md_path):
-        errors.append("bundle: missing task-snapshot.md")
+        errors.append(
+            "bundle: missing %s" % os.path.basename(md_path)
+        )
         return
     try:
         with open(md_path, encoding="utf-8") as handle:
             text = handle.read()
     except OSError as exc:
-        errors.append("bundle: cannot read task-snapshot.md (%s)" % exc)
+        errors.append("bundle: cannot read %s (%s)" % (os.path.basename(md_path), exc))
         return
     identity = snapshot.get("identity") or {}
     for field in ("task_id", "title", "status"):
@@ -308,15 +310,15 @@ def check_deep_sync(snapshot, md_path, errors, limit=10):
             continue
         if value not in text:
             missing.append((path, value))
+    md_name = os.path.basename(md_path)
     for path, value in missing[:limit]:
         errors.append(
-            "sync: %s %r is in the JSON but not in task-snapshot.md — "
-            "re-render the Markdown from the JSON" % (path, value)
+            "sync: %s %r is in the JSON but not in %s — re-render the Markdown "
+            "from the JSON" % (path, value, md_name)
         )
     if len(missing) > limit:
         errors.append(
-            "sync: %d more values are missing from task-snapshot.md"
-            % (len(missing) - limit)
+            "sync: %d more values are missing from %s" % (len(missing) - limit, md_name)
         )
 
 
@@ -326,6 +328,12 @@ def main():
     )
     parser.add_argument("target", help="bundle directory or task-snapshot.json path")
     parser.add_argument("--schema", default=DEFAULT_SCHEMA, help="path to schema.json")
+    parser.add_argument(
+        "--md",
+        help="explicit Markdown snapshot path (default: task-snapshot.md next to "
+        "the JSON; use this to validate a differently named pair such as the "
+        "bundled example)",
+    )
     parser.add_argument(
         "--skip-md", action="store_true", help="skip Markdown presence and sync checks"
     )
@@ -339,6 +347,8 @@ def main():
     args = parser.parse_args()
 
     json_path, md_path = resolve_paths(args.target)
+    if args.md:
+        md_path = os.path.abspath(args.md)
 
     for path, label in ((json_path, "snapshot JSON"), (args.schema, "schema")):
         if not os.path.isfile(path):

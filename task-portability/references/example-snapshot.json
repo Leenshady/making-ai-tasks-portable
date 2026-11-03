@@ -1,0 +1,109 @@
+{
+  "schema_version": "1.0.0",
+  "identity": {
+    "task_id": "task-20261102-1530",
+    "title": "Adjust download interception strategy for the NDM extension",
+    "slug": "ndm-download-filter",
+    "created_at": "2026-11-02T14:00:00+08:00",
+    "updated_at": "2026-11-02T15:30:00+08:00",
+    "status": "in-progress"
+  },
+  "goal": {
+    "goal": "Adjust the NDM Chrome extension's download interception to support file-type filtering, without affecting other features (download management, status monitoring).",
+    "success_criteria": [
+      "`ct.js` gains file-type filtering logic, and existing interception paths behave unchanged.",
+      "Manual test passes: MP4 files are intercepted, other types pass through normally.",
+      "`bg.js` requires no change (verify cross-context communication is unaffected)."
+    ],
+    "constraints": [
+      "Must keep the MV3 architecture using `chrome.storage.session` + `chrome.sendMessage`.",
+      "No third-party libraries.",
+      "Do not change the existing download-management UI or interactions."
+    ],
+    "non_goals": [
+      "No download-speed / resume optimizations.",
+      "Do not refactor `bg.js`."
+    ]
+  },
+  "context": {
+    "background": "The NDM extension uses MV3. `ct.js` (content script) intercepts download links; `bg.js` (service worker) handles network monitoring and cross-context communication. The user wants tighter interception rules for specific file types, but worries about affecting existing features.",
+    "key_decisions": [
+      {
+        "decision": "put filtering logic in `ct.js`, not `bg.js`",
+        "reason": "interception happens at the content-script layer, so a local change is lower risk and matches \"do not affect other features\"."
+      },
+      {
+        "decision": "cache the filter rule via `chrome.storage.session`",
+        "reason": "under MV3 the service worker may sleep; session storage is the most reliable cross-context option."
+      }
+    ],
+    "assumptions": [
+      "The current `ct.js` concentrates interception in a single entry function (not yet confirmed line by line)."
+    ],
+    "terminology": {
+      "ct.js": "content script that intercepts download links",
+      "bg.js": "service worker that monitors network and handles cross-context communication"
+    }
+  },
+  "progress": {
+    "completed": [
+      "Mapped the responsibilities and communication between `ct.js` and `bg.js`.",
+      "Located the download-interception code path."
+    ],
+    "in_progress": [
+      "Analyzing the interception function in `ct.js` line by line."
+    ],
+    "next_steps": [
+      {
+        "priority": 1,
+        "action": "Confirm the location and line numbers of the interception entry function in `ct.js`."
+      },
+      {
+        "priority": 2,
+        "action": "Design the insertion point for file-type filtering."
+      },
+      {
+        "priority": 3,
+        "action": "Implement the filtering logic with minimal changes."
+      }
+    ],
+    "blockers": ["None."],
+    "risks": [
+      "A filter-rule cache key-name collision with existing session data — avoid by using a dedicated namespace."
+    ]
+  },
+  "artifacts": {
+    "files": [
+      {
+        "path": "F:\\dev\\ndm-extension\\ct.js",
+        "description": "content script that intercepts download links; add filtering logic here."
+      },
+      {
+        "path": "F:\\dev\\ndm-extension\\bg.js",
+        "description": "service worker; not changed in this task."
+      },
+      {
+        "path": "F:\\dev\\ndm-extension\\manifest.json",
+        "description": "extension manifest; sync if new permissions are added."
+      }
+    ],
+    "dependencies": [
+      {
+        "name": "Chrome (with the NDM extension)",
+        "how_to_obtain": "Install the latest stable Chrome and load the NDM extension for manual testing."
+      }
+    ],
+    "environment": ["Windows 11", "Chrome latest stable (MV3 support)"],
+    "commands": [
+      "Reload the extension in chrome://extensions to apply changes."
+    ]
+  },
+  "resume": {
+    "how_to_resume": "Open `F:\\dev\\ndm-extension\\ct.js` and find the interception entry function (roughly in the second half of the file), then continue from the first `next_steps` item.",
+    "contact": "Task owner (reachable via the original conversation / workbench).",
+    "handoff_notes": [
+      "The user prefers detailed technical explanations: architecture diagrams, line-by-line code breakdown, file paths with line numbers, and comparison tables.",
+      "For communication, `chrome.storage.session` is preferred over `chrome.sendMessage` (more reliable under MV3); new code should reuse the session approach."
+    ]
+  }
+}
