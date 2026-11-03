@@ -87,6 +87,7 @@ def render_md(data):
         "| Field | Value |",
         "|---|---|",
         "| Task ID | `%s` |" % identity["task_id"],
+        "| Slug | `%s` |" % identity["slug"],
         "| Title | %s |" % identity["title"],
         "| Status | %s |" % identity["status"],
         "| Created At | %s |" % identity["created_at"],

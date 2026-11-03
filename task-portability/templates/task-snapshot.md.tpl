@@ -8,6 +8,7 @@
 | Field | Value |
 |---|---|
 | Task ID | `{{task_id}}` |
+| Slug | `{{slug}}` |
 | Title | {{title}} |
 | Status | {{status}} |
 | Created At | {{created_at}} |

@@ -16,8 +16,9 @@ Checks with --strict (completeness, run only when the checks above pass):
     5. goal.success_criteria is not empty.
     6. progress.next_steps is not empty while status is unfinished.
     7. No placeholder markers (TODO, TBD, FIXME, XXX, <...>, {{...}}, "...").
-    8. artifacts.files[].path is absolute.
+    8. artifacts.files[].path is absolute and has no doubled separators.
     9. identity.updated_at is not earlier than identity.created_at.
+   10. Every JSON leaf string appears verbatim in the Markdown (deep sync).
 
 Exit codes:
     0  valid
@@ -85,6 +86,13 @@ def is_absolute_path(text):
         or bool(re.match(r"^[A-Za-z]:[\\/]", text))
         or text.startswith("\\\\")
     )
+
+
+def has_repeated_separators(text):
+    """Return True if a path contains doubled separators (an escaping mistake)."""
+    body = text[2:] if text.startswith("\\\\") else text
+    body = re.sub(r"^[A-Za-z]:", "", body)
+    return bool(re.search(r"[/\\]{2,}", body))
 
 
 def validate(instance, schema, path="$", errors=None):
@@ -192,7 +200,6 @@ PLACEHOLDER_RE = re.compile(
             r"\bFIXME\b",
             r"\bXXX\b",
             r"lorem ipsum",
-            r"<[^<>]{0,40}>",
             r"\{\{[^}]{0,40}\}\}",
             r"^\s*[.\-\u2026]{2,}\s*$",
             r"待补",
@@ -202,6 +209,18 @@ PLACEHOLDER_RE = re.compile(
     ),
     re.IGNORECASE,
 )
+
+# Angle brackets are case-sensitive on purpose: a whole-string token like
+# "<unverified>" or an all-caps token like "<YOUR_NAME>" is a placeholder, while
+# "<bundle>" inside a real command is not. Matching this case-insensitively would
+# flag every documented command line.
+ANGLE_PLACEHOLDER_RE = re.compile(r"^\s*<[^<>]{1,40}>\s*$|<[A-Z][A-Z_]{1,}>")
+
+
+def find_placeholder(text):
+    """Return the placeholder marker found in text, or None."""
+    match = PLACEHOLDER_RE.search(text) or ANGLE_PLACEHOLDER_RE.search(text)
+    return match.group(0) if match else None
 
 UNFINISHED_STATUSES = ("initialized", "in-progress", "checkpointed")
 
@@ -220,10 +239,10 @@ def check_strict(snapshot, errors):
                 "strict: %s is an empty string — fill it in or omit the field" % path
             )
             continue
-        match = PLACEHOLDER_RE.search(text)
-        if match:
+        marker = find_placeholder(text)
+        if marker:
             errors.append(
-                "strict: %s contains placeholder text %r" % (path, match.group(0))
+                "strict: %s contains placeholder text %r" % (path, marker)
             )
 
     if not goal.get("success_criteria"):
@@ -244,10 +263,17 @@ def check_strict(snapshot, errors):
         if not isinstance(entry, dict):
             continue
         path = entry.get("path")
-        if isinstance(path, str) and path.strip() and not is_absolute_path(path):
-            errors.append(
-                "strict: $.artifacts.files[%d].path %r is not absolute" % (index, path)
-            )
+        if isinstance(path, str) and path.strip():
+            if not is_absolute_path(path):
+                errors.append(
+                    "strict: $.artifacts.files[%d].path %r is not absolute"
+                    % (index, path)
+                )
+            elif has_repeated_separators(path):
+                errors.append(
+                    "strict: $.artifacts.files[%d].path %r has repeated separators "
+                    "— a successor cannot open it; fix the escaping" % (index, path)
+                )
 
     if not resume.get("how_to_resume", "").strip():
         errors.append(
@@ -260,6 +286,37 @@ def check_strict(snapshot, errors):
         errors.append(
             "strict: $.identity.updated_at %r is earlier than created_at %r"
             % (identity.get("updated_at"), identity.get("created_at"))
+        )
+
+
+def check_deep_sync(snapshot, md_path, errors, limit=10):
+    """Verify every leaf string in the JSON appears verbatim in the Markdown.
+
+    The identity-only check in check_sync() cannot see content drift: edit the
+    JSON and leave the Markdown stale, and a successor reads the stale file.
+    """
+    if not os.path.isfile(md_path):
+        return
+    try:
+        with open(md_path, encoding="utf-8") as handle:
+            text = handle.read()
+    except OSError:
+        return
+    missing = []
+    for path, value in walk_strings(snapshot):
+        if not value.strip() or path.startswith("$.schema_version"):
+            continue
+        if value not in text:
+            missing.append((path, value))
+    for path, value in missing[:limit]:
+        errors.append(
+            "sync: %s %r is in the JSON but not in task-snapshot.md — "
+            "re-render the Markdown from the JSON" % (path, value)
+        )
+    if len(missing) > limit:
+        errors.append(
+            "sync: %d more values are missing from task-snapshot.md"
+            % (len(missing) - limit)
         )
 
 
@@ -310,6 +367,8 @@ def main():
     if args.strict:
         strict_errors = []
         check_strict(snapshot, strict_errors)
+        if not args.skip_md:
+            check_deep_sync(snapshot, md_path, strict_errors)
         if strict_errors:
             print("INCOMPLETE  %s" % json_path)
             print("    schema-valid, but not finished:")
