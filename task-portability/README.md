@@ -57,9 +57,26 @@ task-portability/
 ├── SKILL.md               # Skill body (methodology + workflow)
 ├── README.md              # This document
 ├── schema.json            # Validation schema for the snapshot JSON
+├── scripts/               # Optional helpers (Python 3 stdlib only)
+│   ├── validate.py        #   Validate a bundle against schema.json
+│   ├── scaffold.py        #   Create a bundle skeleton
+│   ├── bundle.py          #   Package a bundle into a zip
+│   └── resume.py          #   Print a resume briefing
 ├── templates/
 │   └── task-snapshot.md.tpl  # Markdown snapshot template
 └── references/
     ├── example-snapshot.md   # Example snapshot (what the output looks like)
-    └── glossary.md           # Bilingual term glossary (cross-model semantics)
+    └── glossary.md           # Term glossary (cross-model semantics)
 ```
+
+## Helper Scripts (optional)
+
+Python 3 standard library only — no `pip install`. The snapshot itself never depends on them; they just enforce the rules mechanically.
+
+| Command | Purpose |
+|---|---|
+| `python3 scripts/validate.py <bundle-dir>` | Validate JSON against `schema.json` + Markdown sync check |
+| `python3 scripts/scaffold.py --title "T" --goal "G"` | Create a bundle skeleton with auto timestamps |
+| `python3 scripts/bundle.py <bundle-dir> -o out.zip` | Package a bundle for migration |
+| `python3 scripts/resume.py <bundle-dir>` | Print a compact resume briefing |
+

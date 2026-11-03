@@ -146,6 +146,24 @@ Verify each:
 - State that a successor only needs to read `task-snapshot.md`; use JSON for programmatic processing.
 - Note: if the task is unfinished, re-snapshot at key milestones to keep the latest snapshot complete.
 
+## Helper Scripts (optional)
+
+`scripts/` contains optional accelerators written in **Python 3 standard library only** — no `pip install`, works on Windows/macOS/Linux. They enforce the rules above mechanically. **The snapshot itself never depends on them**: without Python, a successor still resumes from `task-snapshot.md` alone.
+
+| Script | Command | Purpose |
+|---|---|---|
+| `validate.py` | `python3 scripts/validate.py <bundle-dir>` | Validate JSON against `schema.json` and check Markdown sync |
+| `scaffold.py` | `python3 scripts/scaffold.py --title "T" --goal "G"` | Create a bundle skeleton with auto timestamps and `task_id` |
+| `bundle.py` | `python3 scripts/bundle.py <bundle-dir> [-o out.zip]` | Package a bundle for migration (top-level dir preserved) |
+| `resume.py` | `python3 scripts/resume.py <bundle-dir>` | Print a compact resume briefing for a successor |
+
+Rules for using them:
+
+1. **Run `validate.py` before declaring a snapshot done.** Exit code `0` = valid, `1` = errors (each printed with its JSON path), `2` = usage or I/O error. Do not report success while it exits non-zero.
+2. **Prefer `scaffold.py` over hand-writing a bundle.** It generates `task_id` and ISO 8601 timestamps correctly, and renders Markdown from the same data so the two files cannot drift.
+3. **`validate.py` checks what the hard rules require:** missing required fields, wrong types, invalid `status` enums, malformed `slug` patterns, non-ISO `date-time` values, and identity fields absent from the Markdown.
+4. **If Python 3 is unavailable, skip the scripts — do not block the task.** Perform Step 4's self-check manually instead.
+
 ## Migration & Resume (successor's view)
 
 When you are the successor receiving a bundle:
