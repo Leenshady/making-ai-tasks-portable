@@ -61,6 +61,10 @@
 
 - {{in_progress_1}}
 
+**Findings**
+
+- {{finding_1}}
+
 **Next Steps**
 
 1. [priority {{priority_1}}] {{action_1}}

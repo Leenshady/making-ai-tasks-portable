@@ -12,7 +12,7 @@
 | Status | in-progress |
 | Created At | 2026-11-02T14:00:00+08:00 |
 | Updated At | 2026-11-02T15:30:00+08:00 |
-| Schema Version | 1.0.0 |
+| Schema Version | 1.1.0 |
 
 ## Goal
 
@@ -67,6 +67,11 @@ The NDM extension uses MV3. `ct.js` (content script) intercepts download links; 
 **In Progress**
 
 - Analyzing the interception function in `ct.js` line by line.
+
+**Findings**
+
+- `ct.js` does route every interception through a single entry function, so the assumption holds and no wrapper is needed.
+- The existing interception does not check file type at all, so adding a filter cannot break a prior type-based branch.
 
 **Next Steps**
 

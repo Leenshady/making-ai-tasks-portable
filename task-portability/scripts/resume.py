@@ -73,6 +73,12 @@ def main():
         for item in in_progress:
             print("  [~] %s" % item)
 
+    findings = progress.get("findings") or []
+    if findings:
+        print("\nFINDINGS")
+        for item in findings:
+            print("  > %s" % item)
+
     blockers = progress.get("blockers") or []
     if blockers:
         print("\nBLOCKERS")

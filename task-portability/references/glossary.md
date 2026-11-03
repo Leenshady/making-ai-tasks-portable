@@ -8,8 +8,9 @@ This file defines key terms used in this skill, so cross-model successors share 
 | Snapshot Bundle | The complete directory produced by one snapshot (md + json + artifacts). |
 | Self-contained | A successor can resume by reading only the latest snapshot, without revisiting history. |
 | Context | Goals, constraints, background, and key decisions. |
-| Progress | Completed, in-progress, next steps, blockers, and risks. |
+| Progress | Completed, findings, in-progress, next steps, blockers, and risks. |
 | Artifacts | Files involved/produced, dependencies, and environment. |
+| Findings | What the work has revealed so far, stated as an outcome (a diff result, a failure, a surprise) — never as an activity. |
 | Key Decisions | Decisions already made, each with its reason (the most easily lost asset). |
 | Tacit Knowledge | Things "only known by word of mouth", which must go into the handoff notes. |
 | Handoff Notes | Notes recording tacit knowledge so a successor can understand. |

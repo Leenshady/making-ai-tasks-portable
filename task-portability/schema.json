@@ -17,8 +17,8 @@
     "schema_version": {
       "type": "string",
       "description": "Version of this snapshot schema.",
-      "const": "1.0.0",
-      "examples": ["1.0.0"]
+      "const": "1.1.0",
+      "examples": ["1.1.0"]
     },
     "identity": {
       "type": "object",
@@ -156,6 +156,16 @@
           "description": "Current work and how far it has gone.",
           "examples": [
             ["Analyzing the interception function in ct.js line by line."]
+          ]
+        },
+        "findings": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "What the work so far actually revealed, stated as an outcome rather than an activity. Use this for diff results, failed attempts, discovered constraints, and partial results that change the plan. Without it a successor cannot tell whether the current work passed, failed, or is still unknown.",
+          "examples": [
+            [
+              "Diff of the first 60 docs shows no text changes; 2 pages reference images over 2 MB, which are out of scope."
+            ]
           ]
         },
         "next_steps": {

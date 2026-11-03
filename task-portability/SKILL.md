@@ -3,7 +3,7 @@ name: task-portability
 description: "Decouple AI tasks from any specific workbench, model, or platform by snapshotting a task's full state into a portable, self-contained bundle (Markdown + JSON). Lets any AI or human resume the task in any environment with minimal migration cost. Use when the user wants to make an AI task portable, migrate a task between environments, hand off a task to another model/tool, checkpoint a task before switching context, or freeze task state (goal, progress, decisions, TODOs, files, dependencies). Works both before a task starts (initialization) and during a task (incremental checkpoint)."
 description_zh: "将 AI 任务从具体工作台/模型/平台中解耦，把任务完整状态固化成可移植的自包含快照（Markdown + JSON），让任意 AI 或人可在任意环境以最小迁移成本接续任务。"
 description_en: "Decouple AI tasks from workbench/model/platform by snapshotting task state into portable bundles."
-version: 1.0.0
+version: 1.1.0
 author: "Leenshady"
 display_name: "让 AI 任务可迁移"
 display_name_en: "Make AI Tasks Portable"
@@ -86,6 +86,10 @@ A valid snapshot MUST cover the following fields. **Field names MUST match `sche
 ### 4. progress & plan
 - `completed`: done items (specific, verifiable)
 - `in_progress`: current work and how far it has gone (as granular as possible)
+- `findings`: what the work so far actually **revealed** — state the outcome, not the activity. A diff result, a failed attempt, a discovered constraint, a partial result that changes the plan.
+  - WRONG: "diffing the first 60 pages" (that is an activity, already covered by `in_progress`)
+  - RIGHT: "diff of the first 60 pages shows no text changes; 2 pages reference images over 2 MB, which are out of scope"
+  - Why this field exists: without it a successor cannot tell whether the current work passed, failed, or is still unknown, and will redo it.
 - `next_steps`: concrete next actions, ordered by `priority`
 - `blockers`: blockers, open questions, required inputs
 - `risks`: potential risks and mitigations
@@ -101,6 +105,13 @@ A valid snapshot MUST cover the following fields. **Field names MUST match `sche
 - `contact`: how to reach the task owner on ambiguity (optional)
 - `handoff_notes`: tacit knowledge that "only word of mouth would convey" — MUST be written down
 
+## Snapshot Format Changelog
+
+| Version | Change |
+|---|---|
+| `1.1.0` | Added `progress.findings`. A bundle written at `1.0.0` must add the field and bump `schema_version`, otherwise `validate.py` rejects it. |
+| `1.0.0` | Initial format. |
+
 ## Two Entry Points (both MUST be supported)
 
 ### Entry A: before the task starts (initialization snapshot)
@@ -109,6 +120,7 @@ User says "start a portable task" or "make this task migratable". Only goal/cons
 ### Entry B: during the task (incremental / checkpoint snapshot)
 User says "snapshot current progress" / "package this task for migration" / "I want to switch environments". The task has substantial state. Produce an **incremental snapshot**, capturing:
 - completed items and key decisions (most easily lost)
+- findings: what the work has revealed so far — results, failures, surprises (without these the successor repeats your work)
 - remaining work and next steps
 - file list and dependencies
 - mark `updated_at` and increment the version/sequence
@@ -136,6 +148,7 @@ Verify each:
 - [ ] Is `goal` verifiable? Are `success_criteria` observable?
 - [ ] Do `key_decisions` include their `reason`?
 - [ ] Is `progress` specific enough that a successor can continue?
+- [ ] Does `findings` record outcomes (diff results, failed attempts, surprises), not activities?
 - [ ] Is `files` absolute `path` + `description`?
 - [ ] Do `dependencies` include `how_to_obtain`?
 - [ ] Is tacit knowledge written into `handoff_notes`?

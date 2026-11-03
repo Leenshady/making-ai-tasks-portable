@@ -140,6 +140,10 @@ def render_md(data):
         "",
         bullets(progress.get("in_progress", [])),
         "",
+        "**Findings**",
+        "",
+        bullets(progress.get("findings", [])),
+        "",
         "**Next Steps**",
         "",
         numbered(next_steps),
@@ -199,7 +203,7 @@ def build_snapshot(title, goal, slug, status, background, how_to_resume):
     final_slug = slug or slugify(title) or "task-%s" % stamp
 
     return {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "identity": {
             "task_id": "task-%s" % stamp,
             "title": title,
@@ -223,6 +227,7 @@ def build_snapshot(title, goal, slug, status, background, how_to_resume):
         "progress": {
             "completed": [],
             "in_progress": [],
+            "findings": [],
             "next_steps": [],
             "blockers": [],
             "risks": [],

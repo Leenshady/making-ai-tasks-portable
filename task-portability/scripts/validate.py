@@ -368,6 +368,22 @@ def main():
     if not args.skip_md:
         check_sync(snapshot, md_path, errors)
 
+    # A schema_version mismatch means the bundle predates (or postdates) this
+    # skill. Replace the raw const message with something the reader can act on.
+    version_errors = [
+        item for item in errors if item.startswith("$.schema_version: expected const")
+    ]
+    if version_errors:
+        expected = schema.get("properties", {}).get("schema_version", {}).get("const")
+        errors = [item for item in errors if item not in version_errors]
+        errors.insert(
+            0,
+            "snapshot format is %r but this skill expects %r — regenerate the bundle "
+            "with scaffold.py, or add the fields introduced since then and bump "
+            "schema_version (see the format changelog in SKILL.md)"
+            % (snapshot.get("schema_version"), expected),
+        )
+
     if errors:
         print("INVALID  %s" % json_path)
         for message in errors:

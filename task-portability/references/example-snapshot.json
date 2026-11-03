@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "identity": {
     "task_id": "task-20261102-1530",
     "title": "Adjust download interception strategy for the NDM extension",
@@ -52,6 +52,10 @@
     ],
     "in_progress": [
       "Analyzing the interception function in `ct.js` line by line."
+    ],
+    "findings": [
+      "`ct.js` does route every interception through a single entry function, so the assumption holds and no wrapper is needed.",
+      "The existing interception does not check file type at all, so adding a filter cannot break a prior type-based branch."
     ],
     "next_steps": [
       {
