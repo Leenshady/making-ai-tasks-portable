@@ -23,6 +23,7 @@ Each snapshot produces a **task snapshot bundle**:
 - **Markdown** ensures "any model can read it" (the foundation of model-agnosticism)
 - **JSON** ensures "validatable and convertible to other formats" (the foundation of platform-agnosticism and portability)
 - **Artifacts record locations, not bodies** — project root, VCS anchor (remote + branch + resolved commit), key files, and dependencies all live in the snapshot's `artifacts` section
+- **Compressed by construction** — the bundle carries conclusions, not the session that produced them: narration, timestamps, tool output, and repeated findings are filtered out before a field is written
 
 ## When to Use
 
@@ -51,6 +52,7 @@ Each snapshot produces a **task snapshot bundle**:
 5. **Tacit knowledge must be written down** — things "only known by word of mouth" go into the handoff notes.
 6. **Workspace anchored to the repo** — record the project root plus `remote` + `branch` + the resolved commit hash: any environment can rebuild that with a clone, while a workbench's space / project id dies with the tool.
 7. **One field name, no synonyms** — `schema.json` is a closed contract: an extra or misspelled key fails validation, because a synonym that feels natural to a human is silent data loss for every downstream reader.
+8. **Conclusions, not a transcript** — the log is input, the snapshot is the distillate. Process narration, timestamps, tool output, and second copies of the same conclusion are removed, because a successor needs what was learned, not how the session went.
 
 ## File Structure
 
@@ -61,6 +63,7 @@ task-portability/
 ├── schema.json            # Validation schema for the snapshot JSON
 ├── scripts/               # Optional helpers (Python 3 stdlib only)
 │   ├── validate.py        #   Validate a bundle against schema.json
+│   ├── distill.py         #   Filter a session log into candidate conclusions
 │   ├── scaffold.py        #   Create a bundle skeleton (also renders its Markdown)
 │   ├── bundle.py          #   Package a bundle into a zip
 │   └── resume.py          #   Print a resume briefing
@@ -76,8 +79,9 @@ Python 3 standard library only — no `pip install`. The snapshot itself never d
 
 | Command | Purpose |
 |---|---|
-| `python3 scripts/validate.py <bundle-dir> [--strict]` | Validate JSON against `schema.json` (a closed contract: unknown fields are rejected) + Markdown sync check; `--strict` also fails on unfinished skeletons (empty fields, placeholders, relative paths, a path that misspells `workspace.root`) |
+| `python3 scripts/validate.py <bundle-dir> [--strict]` | Validate JSON against `schema.json` (a closed contract: unknown fields are rejected) + Markdown sync check; `--strict` also fails on unfinished skeletons (empty fields, placeholders, relative paths, a path that misspells `workspace.root`) and on log residue (duplicated, narrated, or transcript-marked entries) |
 | `python3 scripts/validate.py references/example-snapshot.json --md references/example-snapshot.md --strict` | Self-check the bundled example; run it after touching `schema.json` or the example |
+| `python3 scripts/distill.py <log-file> [--max N]` | Filter a session log into candidate conclusions (verbatim, with line numbers) and a drop tally; it never summarizes, so you still choose and re-word |
 | `python3 scripts/scaffold.py --title "T" --goal "G"` | Create a bundle skeleton with auto timestamps |
 | `python3 scripts/bundle.py <bundle-dir> -o out.zip` | Package a bundle for migration |
 | `python3 scripts/resume.py <bundle-dir>` | Print a compact resume briefing |

@@ -151,7 +151,7 @@
         "completed": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Done items (specific, verifiable).",
+          "description": "Done items (specific, verifiable), each stated as what is now true rather than the activity that produced it. No entry duplicated in another progress field.",
           "examples": [
             ["Mapped the responsibilities and communication of ct.js and bg.js."]
           ]
@@ -159,7 +159,7 @@
         "in_progress": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Current work and how far it has gone.",
+          "description": "Current work and how far it has gone. Activity is acceptable here (unlike `completed` and `findings`), because the activity is the fact.",
           "examples": [
             ["Analyzing the interception function in ct.js line by line."]
           ]
@@ -167,7 +167,7 @@
         "findings": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "What the work so far actually revealed, stated as an outcome rather than an activity. Use this for diff results, failed attempts, discovered constraints, and partial results that change the plan. Without it a successor cannot tell whether the current work passed, failed, or is still unknown.",
+          "description": "What the work so far actually revealed, stated as an outcome rather than an activity: the conclusion plus the evidence that makes it checkable, in one line. Use this for diff results, failed attempts, discovered constraints, and partial results that change the plan. No narration, no pasted tool output, no restatement of another entry. Without it a successor cannot tell whether the current work passed, failed, or is still unknown.",
           "examples": [
             [
               "Diff of the first 60 docs shows no text changes; 2 pages reference images over 2 MB, which are out of scope."

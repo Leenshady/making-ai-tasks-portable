@@ -26,6 +26,9 @@ Checks with --strict (completeness, run only when the checks above pass):
        file.
    10. identity.updated_at is not earlier than identity.created_at.
    11. Every JSON leaf string appears verbatim in the Markdown (deep sync).
+   12. The snapshot is a set of conclusions, not a transcript: no duplicated
+       entry, no intent narration or activity description, no timestamp /
+       speaker / step markers, and no entry long enough to be pasted output.
 
 Exit codes:
     0  valid
@@ -306,6 +309,194 @@ UNFINISHED_STATUSES = ("initialized", "in-progress", "checkpointed")
 # clones and checks it out gets code that is not the code the task ran on.
 MOVING_REFS = ("head", "main", "master", "latest", "dev", "develop", "trunk")
 
+# A snapshot records conclusions, not the conversation that produced them.
+# These patterns catch the residue - narration, activity, transcript markers -
+# that survives a copy-paste from a session log.
+NARRATION_RE = re.compile(
+    r"^\s*(?:let me|let's|now i|next i|i'll|i will|i'm going|i am going|first,? i"
+    r"|then i|currently i|让我|我来|我先|我接下来|我现在|我准备|接下来(?:我|我们)"
+    r"|现在我|现在让我们|好的[，,]|收到[，,]|明白[，,])",
+    re.IGNORECASE,
+)
+
+ACTIVITY_RE = re.compile(
+    r"^\s*(?:analyzing|checking|reading|reviewing|searching|looking at|looking into"
+    r"|running|testing|debugging|inspecting|examining|exploring|digging|opening"
+    r"|updating|modifying|implementing|refactoring|comparing|investigating"
+    r"|分析|检查|查看|阅读|搜索|运行|测试|调试|排查|对比|修改|更新|重构|梳理)",
+    re.IGNORECASE,
+)
+
+RESULT_CUE_RE = re.compile(
+    r"(?:show(?:s|ed|ing)?|reveal(?:s|ed)?|found|findings?"
+    r"|because|so that|therefore|thus|means|implies|confirmed|verified"
+    r"|result(?:s|ed)?(?:\s+in)?|return(?:s|ed)?|fail(?:s|ed)?|error|exception"
+    r"|cannot|can't|only|instead|conflict|limitation|requires?|no longer"
+    r"|发现|显示|表明|说明|因此|所以|导致|结论|返回|报错|失败|冲突|限制|只有|改为"
+    r"|意味着|确认|通过|正常|成功|生效|完成|仍然|还是)",
+    re.IGNORECASE,
+)
+
+TRANSCRIPT_RE = re.compile(
+    r"^\s*(?:\[\d{1,2}:\d{2}|【\d{1,2}:\d{2}】|\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}"
+    r"|(?:user|human|assistant|ai|system|用户|助手)\s*[:：]"
+    r"|(?:step|步骤)\s*\d+\s*[:：.)、])",
+    re.IGNORECASE,
+)
+
+# Fields where an activity statement means the author copied the log instead of
+# the result. in_progress is excluded on purpose: there, activity is the fact.
+ACTIVITY_FIELDS = ("completed", "findings", "handoff_notes", "assumptions")
+
+MAX_ENTRY_CHARS = 600
+
+# Words that carry no meaning for duplicate detection. Negations ("not", "no",
+# "only") are deliberately absent: they invert a conclusion.
+STOPWORDS = set(
+    """a an the is are was were be been being am do does did doing have has had
+    having and or but if then than that this these those it its of in on at to
+    for from with by as so such there here we you i they he she them us our we
+    will would shall should can could may might must""".split()
+)
+
+
+def normalize_entry(text):
+    """Fold wording differences that do not change meaning."""
+    value = text.strip().lower()
+    value = re.sub(r"[`*_]", "", value)
+    value = re.sub(r"\s+", " ", value)
+    return value.strip(" .。!！?？;；:：,，-—")
+
+
+def content_tokens(text):
+    """Meaning-carrying words, with separators inside identifiers removed.
+
+    Splitting on "-", "_" and "." is what makes "download-interception" and
+    "download interception" the same two words, while keeping "ct.js" and
+    "bg.js" different (ct vs bg).
+    """
+    words = re.findall(r"[a-z0-9]+", re.sub(r"[-_.]", " ", text.lower()))
+    return set(word for word in words if word not in STOPWORDS)
+
+
+def cjk_units(text):
+    """Character bigrams of the Chinese runs in text."""
+    units = set()
+    for chunk in re.findall(r"[\u4e00-\u9fff]+", text):
+        if len(chunk) == 1:
+            units.add(chunk)
+        units.update(chunk[index:index + 2] for index in range(len(chunk) - 1))
+    return units
+
+
+def entries_duplicate(left, right):
+    """True when two entries would lead a successor to the same action.
+
+    Word-level comparison, not character similarity: "the filter runs in ct.js"
+    and "the filter runs in bg.js" are 96% identical as strings and say opposite
+    things. Same content words in a different order, on the other hand, is the
+    usual form of a conclusion restated after a retry.
+    """
+    if normalize_entry(left) == normalize_entry(right):
+        return True
+    words_left, words_right = content_tokens(left), content_tokens(right)
+    if len(words_left) >= 4 and len(words_right) >= 4:
+        return words_left == words_right
+    units_left, units_right = cjk_units(left), cjk_units(right)
+    if len(units_left) >= 4 and len(units_right) >= 4:
+        union = units_left | units_right
+        return len(units_left & units_right) / float(len(union)) >= 0.9
+    return difflib.SequenceMatcher(None, left, right).ratio() >= 0.95
+
+
+def iter_entry_texts(snapshot):
+    """Yield (json_path, text, field) for every conclusion-bearing entry."""
+    progress = snapshot.get("progress") or {}
+    context = snapshot.get("context") or {}
+    resume = snapshot.get("resume") or {}
+    for field in ("completed", "in_progress", "findings", "blockers", "risks"):
+        for index, value in enumerate(progress.get(field) or []):
+            if isinstance(value, str) and value.strip():
+                yield "$.progress.%s[%d]" % (field, index), value, field
+    for index, item in enumerate(progress.get("next_steps") or []):
+        if isinstance(item, dict) and isinstance(item.get("action"), str):
+            if item["action"].strip():
+                yield ("$.progress.next_steps[%d].action" % index, item["action"], "next_steps")
+    for index, item in enumerate(context.get("key_decisions") or []):
+        if isinstance(item, dict) and isinstance(item.get("decision"), str):
+            if item["decision"].strip():
+                yield ("$.context.key_decisions[%d].decision" % index, item["decision"], "decisions")
+    for index, value in enumerate(context.get("assumptions") or []):
+        if isinstance(value, str) and value.strip():
+            yield "$.context.assumptions[%d]" % index, value, "assumptions"
+    for index, value in enumerate(resume.get("handoff_notes") or []):
+        if isinstance(value, str) and value.strip():
+            yield "$.resume.handoff_notes[%d]" % index, value, "handoff_notes"
+
+
+def check_log_quality(snapshot, errors):
+    """Reject a snapshot that is a transcript rather than a set of conclusions.
+
+    A copied log always looks valid: the fields have the right types, the values
+    appear in the Markdown, and the file is huge. What it loses is the point of
+    the snapshot - the successor pays for the process and still has to find the
+    conclusion themselves. So narration, duplicated conclusions, and pasted
+    output are errors under --strict.
+    """
+    entries = list(iter_entry_texts(snapshot))
+
+    seen = []
+    for path, text, field in entries:
+        key = normalize_entry(text)
+        for other_path, other_key in seen:
+            if min(len(key), len(other_key)) < 10:
+                continue
+            if key == other_key:
+                errors.append(
+                    "strict: %s repeats %s word for word — one conclusion, one entry; "
+                    "merge them and keep the more precise wording" % (path, other_path)
+                )
+                break
+            if entries_duplicate(key, other_key):
+                errors.append(
+                    "strict: %s restates %s — same content, different wording; a "
+                    "successor would act on it once, so merge them into one entry"
+                    % (path, other_path)
+                )
+                break
+        else:
+            seen.append((path, key))
+
+        if NARRATION_RE.match(text):
+            errors.append(
+                "strict: %s narrates the work (%r) — record the conclusion, not the "
+                "intention; narration tells a successor nothing it can act on"
+                % (path, text.strip()[:60])
+            )
+        elif (
+            field in ACTIVITY_FIELDS
+            and ACTIVITY_RE.match(text)
+            and not RESULT_CUE_RE.search(text)
+        ):
+            errors.append(
+                "strict: %s describes the activity (%r) rather than what it produced "
+                "— state the outcome and its evidence" % (path, text.strip()[:60])
+            )
+
+        if TRANSCRIPT_RE.match(text):
+            errors.append(
+                "strict: %s starts with a transcript marker (%r) — timestamps, speaker "
+                "labels and step numbers are the log, not the state" % (path, text.strip()[:60])
+            )
+
+        if len(text) > MAX_ENTRY_CHARS:
+            errors.append(
+                "strict: %s is %d characters — that reads as pasted log or tool "
+                "output; quote the one line that decides the question"
+                % (path, len(text))
+            )
+
+
 
 def check_file_prefixes(workspace, files, errors):
     """Reject paths that misspell workspace.root (--strict only)."""
@@ -441,6 +632,7 @@ def check_strict(snapshot, errors):
     check_file_prefixes(
         artifacts.get("workspace") or {}, artifacts.get("files") or [], errors
     )
+    check_log_quality(snapshot, errors)
 
     if not resume.get("how_to_resume", "").strip():
         errors.append(
@@ -508,7 +700,7 @@ def main():
         help="also fail on skeletons that are schema-valid but unfinished "
         "(empty strings, empty success criteria / next steps, placeholder text, "
         "relative file paths, a files[].path that misspells workspace.root, "
-        "updated_at before created_at)",
+        "duplicated or narrated log residue, updated_at before created_at)",
     )
     args = parser.parse_args()
 
@@ -574,7 +766,8 @@ def main():
         print("    markdown: %s (consistent)" % md_path)
     if args.strict:
         print(
-            "    strict: no empty fields, no placeholders, complete enough to hand off"
+            "    strict: no empty fields, no placeholders, no duplicated or narrated "
+            "log residue, complete enough to hand off"
         )
     return 0
 

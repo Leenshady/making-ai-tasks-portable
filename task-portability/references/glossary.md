@@ -16,6 +16,9 @@ This file defines key terms used in this skill, so cross-model successors share 
 | Moving Ref | A ref such as `HEAD` or a branch name. It looks like a commit but resolves to different content later, so it cannot reconstruct the code the task ran on. |
 | Excluded | Paths deliberately left out of the snapshot, each with a reason and how to regenerate. Marks the omission as intentional, so a short file list is not misread as "the task is small". |
 | Findings | What the work has revealed so far, stated as an outcome (a diff result, a failure, a surprise) — never as an activity. |
+| Log Compression | Turning a session log into the facts a successor needs: drop process, keep conclusions, merge duplicates. The snapshot is the distillate, never the log. |
+| Process Residue | Log content that carries no state: intent narration, step numbers, timestamps, speaker labels, pasted tool output. It costs context and gives the successor nothing to act on. |
+| Duplicate Conclusion | The same conclusion recorded twice, usually after a retry. One entry is enough — keep the more precise wording and fold in any reason the other carried. |
 | Key Decisions | Decisions already made, each with its reason (the most easily lost asset). |
 | Tacit Knowledge | Things "only known by word of mouth", which must go into the handoff notes. |
 | Handoff Notes | Notes recording tacit knowledge so a successor can understand. |
