@@ -61,6 +61,7 @@ task-portability/
 ├── SKILL.md               # Skill body (methodology + workflow)
 ├── README.md              # This document
 ├── schema.json            # Validation schema for the snapshot JSON
+├── _icon.png              # Skill icon (512×512)
 ├── scripts/               # Optional helpers (Python 3 stdlib only)
 │   ├── validate.py        #   Validate a bundle against schema.json
 │   ├── distill.py         #   Filter a session log into candidate conclusions
